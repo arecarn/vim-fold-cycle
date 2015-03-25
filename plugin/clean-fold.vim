@@ -3,12 +3,9 @@ function! CleanFold(foldchar)
     let line = getline(v:foldstart)
 
     if &foldmethod == 'marker'
-        echo line
         let foldmarker = substitute(&foldmarker, '\zs,.*', '', '')
         let cmt = substitute(&commentstring, '\zs%s.*', '', '')
-        let substitute_string = '\s*' . '\(' . cmt . '\)\?' . '\s*' . foldmarker .'\d*\s*',
-        let line = substitute(line, substitute_string, '', 'g')
-        echo line
+        let line = substitute(line, '\s*'. '\('.cmt.'\)\?'. '\s*'.foldmarker.'\d*\s*', '', 'g')
     endif
 
     let lines_count = v:foldend - v:foldstart + 1
