@@ -78,7 +78,7 @@ function! fold#find_previouse(line) abort
     return fold#do_fold_function('zk', a:line)
 endfunction
 
-function! fold#find_branch_endd(line) abort
+function! fold#find_branch_end(line) abort
     return fold#do_fold_function(']z', a:line)
 endfunction
 
@@ -92,12 +92,12 @@ function! fold#find_max_unfolded() abort
     let current_line = line('.')
 
     if fold#is_last(current_line)
-        let current_line = current_line - 1
+        let fold_level = foldlevel(current_line - 1)
+    else
+        let fold_level = foldlevel(current_line)
     endif
 
-    let fold_level = foldlevel(current_line)
-
-    let branch_end = fold#find_branch_endd(current_line) "if this return -1 wat do?
+    let branch_end = fold#find_branch_end(current_line) "if this return -1 wat do?
 
     let line = current_line
     let max_fold_level = fold_level
@@ -134,12 +134,14 @@ function! fold#find_max_folded() abort
     let current_line = line('.')
 
     if fold#is_last(current_line)
-        let current_line = current_line - 1
+        let fold_level = foldlevel(current_line - 1)
+    else
+        let fold_level = foldlevel(current_line)
     endif
 
     let fold_level = foldlevel(current_line)
 
-    let branch_end = fold#find_branch_endd(current_line) "if this return -1 wat do?
+    let branch_end = fold#find_branch_end(current_line) "if this return -1 wat do?
     if branch_end == -1
         if g:D | echomsg string("branch_end = " . branch_end) | endif
         if g:D | echomsg string("return super early") | endif
@@ -181,10 +183,13 @@ endfunction
 
 function! fold#open() abort
     let to_open = fold#find_max_folded()
+
+    if g:D | echomsg string("max folded = " . to_open) | endif
     let line = line('.')
-    let branch_end = fold#find_branch_endd(line) "if this return -1 wat do?
+    let branch_end = fold#find_branch_end(line) "if this return -1 wat do?
 
     if to_open == -2
+        if g:D | echomsg string("opening for some reason") | endif
         foldopen
     endif
 
@@ -197,7 +202,7 @@ function! fold#open() abort
 
     while line < branch_end
         if foldlevel(line) == to_open
-            if g:D | echomsg string("folding line " . line) | endif
+            if g:D | echomsg string("opening line " . line) | endif
             execute line . 'foldopen'
         endif
         let line = fold#find_next(line)
@@ -207,6 +212,8 @@ function! fold#open() abort
     endwhile
 
 endfunction
+
+
 
 function! fold#close() abort
     let to_fold = fold#find_max_unfolded()
@@ -219,7 +226,7 @@ function! fold#close() abort
 
     let line = line('.')
 
-    let branch_end = fold#find_branch_endd(line) "if this return -1 wat do?
+    let branch_end = fold#find_branch_end(line) "if this return -1 wat do?
 
 
     while line < branch_end
