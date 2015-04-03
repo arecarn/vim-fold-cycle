@@ -33,17 +33,17 @@ set cpo&vim
 function! fold#open() abort "{{{2
     let to_open = s:find_max_folded()
 
-    if g:D | echomsg string("max folded = " . to_open) | endif
+    if g:fold_debug | echomsg string("max folded = " . to_open) | endif
     let line = line('.')
     let branch_end = s:find_branch_end(line) "if this return -1 wat do?
 
     if to_open == -2
-        if g:D | echomsg string("opening for some reason") | endif
+        if g:fold_debug | echomsg string("opening for some reason") | endif
         foldopen
     endif
 
     if to_open == -1 || to_open == 0
-        if g:D | echomsg string("closing all folds") | endif
+        if g:fold_debug | echomsg string("closing all folds") | endif
         execute line . ',' . branch_end . "foldclose!"
         return
     endif
@@ -51,7 +51,7 @@ function! fold#open() abort "{{{2
 
     while line < branch_end
         if foldlevel(line) == to_open
-            if g:D | echomsg string("opening line " . line) | endif
+            if g:fold_debug | echomsg string("opening line " . line) | endif
             execute line . 'foldopen'
         endif
         let line = s:find_next(line)
@@ -67,7 +67,7 @@ function! fold#close() abort "{{{2
     let to_fold = s:find_max_unfolded()
 
     if to_fold == -1 || to_fold == 0
-        if g:D | echomsg string("opening all folds") | endif
+        if g:fold_debug | echomsg string("opening all folds") | endif
         foldopen!
         return
     endif
@@ -79,7 +79,7 @@ function! fold#close() abort "{{{2
 
     while line < branch_end
         if foldlevel(line) == to_fold
-            if g:D | echomsg string("folding line " . line) | endif
+            if g:fold_debug | echomsg string("folding line " . line) | endif
             execute line . 'foldclose'
         endif
         let line = s:find_next(line)
@@ -210,16 +210,16 @@ function! s:find_max_unfolded() abort "{{{2
     let line = current_line
     let max_fold_level = fold_level
 
-    if g:D | echomsg string("branch_end = " . branch_end) | endif
+    if g:fold_debug | echomsg string("branch_end = " . branch_end) | endif
 
     while line < branch_end
-        if g:D | echomsg string("line = " . line) | endif
+        if g:fold_debug | echomsg string("line = " . line) | endif
 
         let new_line = s:find_next(line) "if this return -1 wat do?
 
         if new_line == -1
-            if g:D | echomsg string("new_line = " . new_line) | endif
-            if g:D | echomsg string("return early") | endif
+            if g:fold_debug | echomsg string("new_line = " . new_line) | endif
+            if g:fold_debug | echomsg string("return early") | endif
             return max_fold_level
         else
             let line = new_line
@@ -230,7 +230,7 @@ function! s:find_max_unfolded() abort "{{{2
         endif
     endwhile
 
-    if g:D | echomsg string("return late") | endif
+    if g:fold_debug | echomsg string("return late") | endif
     if current_line == line
         return -1
     else
@@ -252,8 +252,8 @@ function! s:find_max_folded() abort "{{{2
 
     let branch_end = s:find_branch_end(current_line) "if this return -1 wat do?
     if branch_end == -1
-        if g:D | echomsg string("branch_end = " . branch_end) | endif
-        if g:D | echomsg string("return super early") | endif
+        if g:fold_debug | echomsg string("branch_end = " . branch_end) | endif
+        if g:fold_debug | echomsg string("return super early") | endif
         return -2
     endif
 
@@ -261,17 +261,17 @@ function! s:find_max_folded() abort "{{{2
     let line = current_line
     let max_fold_level = -1
 
-    if g:D | echomsg string("branch_end = " . branch_end) | endif
+    if g:fold_debug | echomsg string("branch_end = " . branch_end) | endif
 
     while line < branch_end
-        if g:D | echomsg string("line = " . line) | endif
+        if g:fold_debug | echomsg string("line = " . line) | endif
 
         let new_line = s:find_next(line) "if this return -1 wat do?
 
         if new_line == -1
-            if g:D | echomsg string("new_line = " . new_line) | endif
-            if g:D | echomsg string("max_fold_level = " . max_fold_level) | endif
-            if g:D | echomsg string("return early") | endif
+            if g:fold_debug | echomsg string("new_line = " . new_line) | endif
+            if g:fold_debug | echomsg string("max_fold_level = " . max_fold_level) | endif
+            if g:fold_debug | echomsg string("return early") | endif
             return max_fold_level
         else
             let line = new_line
@@ -282,7 +282,7 @@ function! s:find_max_folded() abort "{{{2
         endif
     endwhile
 
-    if g:D | echomsg string("return late") | endif
+    if g:fold_debug | echomsg string("return late") | endif
     if current_line == line
         return -1
     else
