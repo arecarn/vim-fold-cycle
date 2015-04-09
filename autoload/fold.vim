@@ -29,61 +29,136 @@ set cpo&vim
 " n all n level folds open
 "
 " if not one of these states return to state 1
-"
+
+
+function! s:d_header(text) abort
+    try
+        call util#debug#print_header(a:text)
+    catch
+    endtry
+endfunction
+
+function! s:d_var_msg(variable, text) abort
+    try
+        call util#debug#print_var_msg(a:variable, a:text)
+    catch
+    endtry
+endfunction
+
+function! s:d_msg(text) abort
+    try
+        call util#debug#print_msg(a:text)
+    catch
+    endtry
+endfunction
+
+function! s:d_msg(text) abort
+    try
+        call util#debug#print_msg(a:text)
+    catch
+    endtry
+endfunction
+
+function! s:folded(line)
+    return foldclosed(a:line) == -1 ? 0 : 1
+endfunction
+
+function! s:init() "{{{2
+    let s:current_line = line('.')
+    let s:folded = s:folded('.')
+    let s:fold_level = foldlevel(s:current_line)
+    let s:branch_end = s:find_branch_end(s:current_line)
+
+    let s:is_last = s:is_last(s:current_line)
+    let s:max_folded_level = s:find_max_folded()
+    let s:max_unfolded_level = s:find_max_unfolded()
+
+    call s:d_header('init')
+    call s:d_var_msg(s:current_line, 's:current_line')
+    call s:d_var_msg(s:folded, 's:folded')
+    call s:d_var_msg(s:fold_level, 's:fold_level')
+    call s:d_var_msg(s:branch_end, 's:branch_end')
+
+    call s:d_var_msg(s:is_last, 's:is_last')
+    call s:d_var_msg(s:max_folded_level, 's:max_folded_level')
+    call s:d_var_msg(s:max_unfolded_level, 's:max_unfolded_level')
+endfunction "}}}2
+
 function! fold#open() abort "{{{2
-    let to_open = s:find_max_folded()
+    " call s:d_header('fold#open()')
+    call s:init()
 
-    if g:fold_debug | echomsg string("max folded = " . to_open) | endif
-    let line = line('.')
-    let branch_end = s:find_branch_end(line) "if this return -1 wat do?
-
-    if to_open == -2
-        if g:fold_debug | echomsg string("opening for some reason") | endif
+    if s:folded
+        call s:d_msg("opening fold 1")
         foldopen
-    endif
-
-    if to_open == -1 || to_open == 0
-        if g:fold_debug | echomsg string("closing all folds") | endif
-        execute line . ',' . branch_end . "foldclose!"
         return
     endif
 
+    let level_to_open = s:max_folded_level
 
-    while line < branch_end
-        if foldlevel(line) == to_open
-            if g:fold_debug | echomsg string("opening line " . line) | endif
+    if level_to_open == -1
+        "s:branch_end is on the same line as the same line as cursor
+        call s:d_msg("opening fold")
+        foldopen
+    endif
+
+    if level_to_open == -1 || level_to_open == 0
+        call s:d_msg("closing all folds")
+        call s:fold_bottom_up(s:current_line)
+        return
+    endif
+
+    let line = s:current_line
+    while line < s:branch_end
+        if foldlevel(line) == level_to_open
+            call s:d_msg("opening line " . line)
             execute line . 'foldopen'
         endif
+
         let line = s:find_next(line)
-        if line == -1
+        if line == 0
             return
         endif
     endwhile
-
 endfunction "}}}2
 
 
 function! fold#close() abort "{{{2
-    let to_fold = s:find_max_unfolded()
+    " call s:d_header('fold#close()')
 
-    if to_fold == -1 || to_fold == 0
-        if g:fold_debug | echomsg string("opening all folds") | endif
+    call s:init()
+
+    let to_fold = s:max_unfolded_level
+
+    if to_fold == s:fold_level && s:folded
+        foldopen!
+        return
+    elseif to_fold == s:fold_level
+        foldclose
+        return
+    endif
+
+
+    if ((to_fold == 'no_nested_folds') || (to_fold == -1))  && s:folded == 1
+        foldopen!
+        return
+    endif
+
+
+    if to_fold == 0
+        call s:d_msg("opening all folds")
         foldopen!
         return
     endif
 
     let line = line('.')
-
-    let branch_end = s:find_branch_end(line) "if this return -1 wat do?
-
-
-    while line < branch_end
+    while line < s:branch_end
         if foldlevel(line) == to_fold
-            if g:fold_debug | echomsg string("folding line " . line) | endif
+            call s:d_msg('folding line ' . line)
             execute line . 'foldclose'
         endif
         let line = s:find_next(line)
-        if line == -1
+        if line == 0
             return
         endif
     endwhile
@@ -92,6 +167,7 @@ endfunction "}}}2
 
 
 function! fold#clean_fold(foldchar) "{{{2
+    " call s:d_header('fold#clean_fold()')
     "TODO handle wide chars with visual col
     let line = getline(v:foldstart)
 
@@ -112,17 +188,19 @@ endfunction "}}}2
 
 
 function! fold#fold_text() "{{{2
+    " call s:d_header('fold#fold_text()')
     let line = getline(v:foldstart)
     " Foldtext ignores tabstop and shows tabs as one space,
     " so convert tabs to 'tabstop' spaces so text lines up
     let ts = repeat(' ',&tabstop)
     let line = substitute(line, '\t', ts, 'g')
-  let numLines = v:foldend - v:foldstart + 1
+    let numLines = v:foldend - v:foldstart + 1
     return line.' ['.numLines.' lines]'
 endfunction "}}}2
 
 
 function! fold#get_potion_fold(lnum) "{{{2
+    " call s:d_header('fold#get_potion_fold()')
     if getline(a:lnum) =~? '\v^\s*$'
         return '-1'
     endif
@@ -158,7 +236,7 @@ function! s:do_fold_function(fold_keys, line) abort "{{{2
     call winrestview(view)
 
     if  line == current_line
-        return -1
+        return 0
     else
         return line
     endif
@@ -166,6 +244,7 @@ endfunction "}}}2
 
 
 function! s:is_last(line) abort "{{{2
+    " call s:d_header('s:is_last()')
     if type(a:line) == type('')
         let current_line = line(a:line)
     else
@@ -187,105 +266,107 @@ endfunction "}}}2
 
 
 function! s:find_branch_end(line) abort "{{{2
+    " call s:d_header('s:find_branch_end()')
     return s:do_fold_function(']z', a:line)
 endfunction "}}}2
 
 
 function! s:find_next(line) abort "{{{2
+    " call s:d_header('s:find_next()')
     return s:do_fold_function('zj', a:line)
 endfunction "}}}2
 
 
 function! s:find_max_unfolded() abort "{{{2
-    let current_line = line('.')
+    call s:d_header('s:find_max_unfolded()')
 
-    if s:is_last(current_line)
-        let fold_level = foldlevel(current_line - 1)
-    else
-        let fold_level = foldlevel(current_line)
-    endif
+    let max_fold_level = s:fold_level
+    let line = s:current_line
 
-    let branch_end = s:find_branch_end(current_line) "if this return -1 wat do?
+    while line < s:branch_end
+        call s:d_var_msg(line, "line")
 
-    let line = current_line
-    let max_fold_level = fold_level
+        let new_line = s:find_next(line) "if this return 0 wat do?
 
-    if g:fold_debug | echomsg string("branch_end = " . branch_end) | endif
-
-    while line < branch_end
-        if g:fold_debug | echomsg string("line = " . line) | endif
-
-        let new_line = s:find_next(line) "if this return -1 wat do?
-
-        if new_line == -1
-            if g:fold_debug | echomsg string("new_line = " . new_line) | endif
-            if g:fold_debug | echomsg string("return early") | endif
+        if new_line == 0
+            call s:d_var_msg(new_line, "new_line")
+            call s:d_msg("return early")
             return max_fold_level
+
         else
             let line = new_line
         endif
 
-        if (foldlevel(line) > max_fold_level) && (foldclosed(line) == -1)
+        if (foldlevel(line) > max_fold_level) && !s:folded(line)
             let max_fold_level = foldlevel(line)
         endif
     endwhile
 
-    if g:fold_debug | echomsg string("return late") | endif
-    if current_line == line
-        return -1
+    call s:d_msg("return late")
+
+    if s:current_line == line "no nested folds
+        return 'no nested folds'
     else
         return max_fold_level
     endif
 endfunction "}}}2
 
+function! s:fold_bottom_up(line) abort
+    if type(a:line) == type('')
+        let current_line = line(a:line)
+    else
+        let current_line = a:line
+    endif
+
+    let view = winsaveview()
+    execute current_line
+
+    normal! ]z
+    let line = line('.')
+
+    while line('.') > current_line
+        normal! zck
+    endwhile
+
+    call winrestview(view)
+endfunction
+
 
 function! s:find_max_folded() abort "{{{2
-    let current_line = line('.')
+    call s:d_header('s:find_max_folded()')
 
-    if s:is_last(current_line)
-        let fold_level = foldlevel(current_line - 1)
-    else
-        let fold_level = foldlevel(current_line)
+    if s:branch_end == 0
+        call s:d_msg("branch end is on the same line as cursor")
+        return 'banch end same as cursor line'
     endif
 
-    let fold_level = foldlevel(current_line)
-
-    let branch_end = s:find_branch_end(current_line) "if this return -1 wat do?
-    if branch_end == -1
-        if g:fold_debug | echomsg string("branch_end = " . branch_end) | endif
-        if g:fold_debug | echomsg string("return super early") | endif
-        return -2
-    endif
-
-
-    let line = current_line
+    let line = s:current_line
     let max_fold_level = -1
 
-    if g:fold_debug | echomsg string("branch_end = " . branch_end) | endif
+    while line < s:branch_end
+        call s:d_var_msg(line, "line")
 
-    while line < branch_end
-        if g:fold_debug | echomsg string("line = " . line) | endif
+        let new_line = s:find_next(line)
+        call s:d_var_msg(new_line, "new_line")
 
-        let new_line = s:find_next(line) "if this return -1 wat do?
-
-        if new_line == -1
-            if g:fold_debug | echomsg string("new_line = " . new_line) | endif
-            if g:fold_debug | echomsg string("max_fold_level = " . max_fold_level) | endif
-            if g:fold_debug | echomsg string("return early") | endif
+        if new_line == 0 "need to check here if it's folded
+            call s:d_msg("found the last line")
             return max_fold_level
         else
             let line = new_line
         endif
 
-        if (foldlevel(line) > max_fold_level) && (foldclosed(line) != -1)
+        if (foldlevel(line) > max_fold_level) && s:folded(line)
             let max_fold_level = foldlevel(line)
+            call s:d_var_msg(max_fold_level, 'max_fold_level')
         endif
     endwhile
 
-    if g:fold_debug | echomsg string("return late") | endif
-    if current_line == line
-        return -1
+    if s:current_line == line
+        call s:d_msg("return late")
+        return 'did not move'
     else
+        call s:d_msg("return late")
         return max_fold_level
     endif
 endfunction "}}}2
