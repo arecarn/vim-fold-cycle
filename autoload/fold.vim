@@ -70,8 +70,6 @@ function! s:init() "{{{2
     let s:branch_end = s:find_branch_end(s:current_line)
 
     let s:is_last = s:is_last(s:current_line)
-    let s:max_folded_level = s:find_max_folded()
-    let s:max_unfolded_level = s:find_max_unfolded()
 
     call s:d_header('init')
     call s:d_var_msg(s:current_line, 's:current_line')
@@ -80,37 +78,41 @@ function! s:init() "{{{2
     call s:d_var_msg(s:branch_end, 's:branch_end')
 
     call s:d_var_msg(s:is_last, 's:is_last')
-    call s:d_var_msg(s:max_folded_level, 's:max_folded_level')
-    call s:d_var_msg(s:max_unfolded_level, 's:max_unfolded_level')
 endfunction "}}}2
 
 function! fold#open() abort "{{{2
     " call s:d_header('fold#open()')
     call s:init()
+    let max_folded_level = s:find_max_folded()
+    call s:d_var_msg(max_folded_level, 'max_folded_level')
 
     if s:folded
-        call s:d_msg("opening fold 1")
+        call s:d_msg("opening fold :1")
         foldopen
         return
     endif
 
-    let level_to_open = s:max_folded_level
-
-    if level_to_open == -1
-        "s:branch_end is on the same line as the same line as cursor
-        call s:d_msg("opening fold")
-        foldopen
+    if max_folded_level == 'no branch end'
+        call s:d_msg("opening fold :2")
+        " foldopen
+        return
     endif
 
-    if level_to_open == -1 || level_to_open == 0
+    if max_folded_level == -1 || max_folded_level == 0
         call s:d_msg("closing all folds")
         call s:fold_bottom_up(s:current_line)
         return
     endif
 
+    if max_folded_level == s:fold_level
+        call s:d_msg("closing fold")
+        execute s:current_line . ',' s:branch_end . 'foldclose!'
+        return
+    endif
+
     let line = s:current_line
     while line < s:branch_end
-        if foldlevel(line) == level_to_open
+        if foldlevel(line) == max_folded_level
             call s:d_msg("opening line " . line)
             execute line . 'foldopen'
         endif
@@ -128,24 +130,31 @@ function! fold#close() abort "{{{2
 
     call s:init()
 
-    let to_fold = s:max_unfolded_level
+    let max_unfolded_level = s:find_max_unfolded()
+    call s:d_var_msg(max_unfolded_level, 'max_unfolded_level')
 
-    if to_fold == s:fold_level && s:folded
+    if max_unfolded_level == 'no nested folds' && !s:folded
+        return
+    else
+        foldopen!
+    endif
+
+    if max_unfolded_level == s:fold_level && s:folded
         foldopen!
         return
-    elseif to_fold == s:fold_level
+    elseif max_unfolded_level == s:fold_level
         foldclose
         return
     endif
 
 
-    if ((to_fold == 'no_nested_folds') || (to_fold == -1))  && s:folded == 1
+    if ((max_unfolded_level == 'no_nested_folds') || (max_unfolded_level == -1))  && s:folded == 1
         foldopen!
         return
     endif
 
 
-    if to_fold == 0
+    if max_unfolded_level == 0
         call s:d_msg("opening all folds")
         foldopen!
         return
@@ -153,7 +162,7 @@ function! fold#close() abort "{{{2
 
     let line = line('.')
     while line < s:branch_end
-        if foldlevel(line) == to_fold
+        if foldlevel(line) == max_unfolded_level
             call s:d_msg('folding line ' . line)
             execute line . 'foldclose'
         endif
@@ -297,7 +306,7 @@ function! s:find_max_unfolded() abort "{{{2
             let line = new_line
         endif
 
-        if (foldlevel(line) > max_fold_level) && !s:folded(line)
+        if (foldlevel(line) > max_fold_level) && !s:folded(line) "move to top TODO? line to initialized early?
             let max_fold_level = foldlevel(line)
         endif
     endwhile
@@ -336,8 +345,8 @@ function! s:find_max_folded() abort "{{{2
     call s:d_header('s:find_max_folded()')
 
     if s:branch_end == 0
-        call s:d_msg("branch end is on the same line as cursor")
-        return 'banch end same as cursor line'
+        call s:d_msg('branch end is on the same line as cursor')
+        return 'no branch end'
     endif
 
     let line = s:current_line
@@ -345,6 +354,10 @@ function! s:find_max_folded() abort "{{{2
 
     while line < s:branch_end
         call s:d_var_msg(line, "line")
+        if (foldlevel(line) > max_fold_level) && s:folded(line)
+            let max_fold_level = foldlevel(line)
+            call s:d_var_msg(max_fold_level, 'max_fold_level')
+        endif
 
         let new_line = s:find_next(line)
         call s:d_var_msg(new_line, "new_line")
@@ -356,10 +369,6 @@ function! s:find_max_folded() abort "{{{2
             let line = new_line
         endif
 
-        if (foldlevel(line) > max_fold_level) && s:folded(line)
-            let max_fold_level = foldlevel(line)
-            call s:d_var_msg(max_fold_level, 'max_fold_level')
-        endif
     endwhile
 
     if s:current_line == line
