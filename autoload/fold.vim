@@ -110,7 +110,8 @@ function! s:is_last(line) abort "{{{2
 endfunction "}}}2
 
 
-function! s:find_branch_end(line) abort "{{{2
+function! s:find_branch_end(line) abort "{{{2 
+    "TODO only valid when on an open fold
     " call s:d_header('s:find_branch_end()')
     return s:do_fold_function(']z', a:line)
 endfunction "}}}2
@@ -144,6 +145,7 @@ endfunction "}}}
 
 
 function! s:find_max_unfolded() abort "{{{2
+    call s:init()
     call s:d_header('s:find_max_unfolded()')
 
     let max_fold_level = s:fold_level
@@ -179,6 +181,7 @@ endfunction "}}}2
 
 
 function! s:find_max_folded() abort "{{{2
+    call s:init()
     call s:d_header('s:find_max_folded()')
 
     if s:branch_end == 0
@@ -187,7 +190,7 @@ function! s:find_max_folded() abort "{{{2
     endif
 
     let line = s:current_line
-    let max_fold_level = -1
+    let max_fold_level = s:fold_level
 
     while line < s:branch_end
         call s:d_var_msg(line, "line")
@@ -208,13 +211,7 @@ function! s:find_max_folded() abort "{{{2
 
     endwhile
 
-    if s:current_line == line
-        call s:d_msg("return late")
-        return 'did not move'
-    else
-        call s:d_msg("return late")
-        return max_fold_level
-    endif
+    return max_fold_level
 endfunction "}}}2
 
 
@@ -225,7 +222,6 @@ endfunction "}}}2
 
 function! fold#open() abort "{{{2
     " call s:d_header('fold#open()')
-    call s:init()
     let max_folded_level = s:find_max_folded()
     call s:d_var_msg(max_folded_level, 'max_folded_level')
 
@@ -271,7 +267,6 @@ endfunction "}}}2
 function! fold#close() abort "{{{2
     " call s:D_header('fold#close()')
 
-    call s:init()
 
     let max_unfolded_level = s:find_max_unfolded()
     call s:d_var_msg(max_unfolded_level, 'max_unfolded_level')
