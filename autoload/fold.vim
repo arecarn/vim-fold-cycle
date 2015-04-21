@@ -214,6 +214,32 @@ function! s:find_max_folded() abort "{{{2
 
     return max_fold_level
 endfunction "}}}2
+
+
+function! s:branch_close() abort "{{{2
+    let max_unfolded_level = s:find_max_unfolded()
+    " let current_fold_level =  foldlevel(s:current_line)
+
+
+    while !s:folded(s:current_line)
+        let line = s:current_line
+
+
+        while line < s:branch_end
+            if foldlevel(line) == max_unfolded_level
+                call s:d_msg('folding line ' . line)
+                execute line . 'foldclose'
+            endif
+            let line = s:find_next(line)
+            call s:d_var_msg(line, 'line')
+            if line == 0
+                call s:d_msg('break from branch_close()')
+                break
+            endif
+        endwhile
+        let max_unfolded_level = max_unfolded_level - 1
+    endwhile
+endfunction "}}}2
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}
 
 " PUBLIC FUNCTIONS MAPPINGS {{{
@@ -312,30 +338,6 @@ endfunction "}}}2
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}
 
 
-function! s:branch_close() abort "{{{2
-    let max_unfolded_level = s:find_max_unfolded()
-    " let current_fold_level =  foldlevel(s:current_line)
-
-
-    while !s:folded(s:current_line)
-        let line = s:current_line
-
-
-        while line < s:branch_end
-            if foldlevel(line) == max_unfolded_level
-                call s:d_msg('folding line ' . line)
-                execute line . 'foldclose'
-            endif
-            let line = s:find_next(line)
-            call s:d_var_msg(line, 'line')
-            if line == 0
-                call s:d_msg('break from branch_close()')
-                break
-            endif
-        endwhile
-        let max_unfolded_level = max_unfolded_level - 1
-    endwhile
-endfunction "}}}2
 
 " PUBLIC FUNCTIONS VISUALS {{{
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
