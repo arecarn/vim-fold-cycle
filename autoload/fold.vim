@@ -11,42 +11,43 @@ set cpo&vim
 
 " PRIVATE FUNCTIONS DEBUG {{{
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-function! s:d_header(text) abort
+function! s:d_header(text) abort "{{{2
     try
         call util#debug#print_header(a:text)
     catch
     endtry
-endfunction
+endfunction "}}}2
 
-function! s:d_var_msg(variable, text) abort
+function! s:d_var_msg(variable, text) abort "{{{2
     try
         call util#debug#print_var_msg(a:variable, a:text)
     catch
     endtry
-endfunction
+endfunction "}}}2
 
-function! s:d_msg(text) abort
+function! s:d_msg(text) abort "{{{2
     try
         call util#debug#print_msg(a:text)
     catch
     endtry
-endfunction
+endfunction "}}}2
 
-function! s:d_msg(text) abort
+function! s:d_msg(text) abort "{{{2
     try
         call util#debug#print_msg(a:text)
     catch
     endtry
-endfunction
-
-function! s:folded(line)
-    return foldclosed(a:line) == -1 ? 0 : 1
-endfunction
+endfunction "}}}2
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}
 
 " PRIVATE FUNCTIONS {{{
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-function! s:init() "{{{2
+function! s:folded(line) abort "{{{2
+    return foldclosed(a:line) == -1 ? 0 : 1
+endfunction "}}}2
+
+
+function! s:init() abort "{{{2
     call s:d_header('init')
 
     let s:current_line = line('.')
@@ -213,13 +214,10 @@ function! s:find_max_folded() abort "{{{2
 
     return max_fold_level
 endfunction "}}}2
-
-
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}
 
 " PUBLIC FUNCTIONS MAPPINGS {{{
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-
 function! fold#open() abort "{{{2
     " call s:d_header('fold#open()')
     let max_folded_level = s:find_max_folded()
@@ -311,7 +309,6 @@ function! fold#close() abort "{{{2
     endwhile
 
 endfunction "}}}2
-
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}
 
 " PUBLIC FUNCTIONS VISUALS {{{
