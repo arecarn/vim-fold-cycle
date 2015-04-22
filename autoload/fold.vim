@@ -9,6 +9,14 @@ let s:save_cpo = &cpo
 set cpo&vim
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}
 
+" CONSTANTS {{{
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+let s:NO_MORE_FOLDS_FOUND = 0
+
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}
+
+
+
 " PRIVATE FUNCTIONS DEBUG {{{
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 function! s:d_header(text) abort "{{{2
@@ -134,13 +142,12 @@ function! s:find_max_unfolded() abort "{{{2
     while line < s:branch_end
         call s:d_var_msg(line, "line")
 
-        let new_line = s:find_next(line) "if this return 0 wat do?
+        let new_line = s:find_next(line) "TODO why don't we just use line instead of new_line?
 
-        if new_line == 0
+        if new_line == s:NO_MORE_FOLDS_FOUND
             call s:d_var_msg(new_line, "new_line")
             call s:d_msg("return early")
             return max_fold_level
-
         else
             let line = new_line
         endif
@@ -152,8 +159,9 @@ function! s:find_max_unfolded() abort "{{{2
 
     call s:d_msg("return late")
 
-    if s:current_line == line "no nested folds
-        return 'no nested folds'
+    if s:current_line == line "no nested folds 
+        "TODO I don't think we ever got here think about this
+        return 'no nested folds' 
     else
         return max_fold_level
     endif
@@ -164,6 +172,7 @@ function! s:find_max_folded() abort "{{{2
     call s:init()
     call s:d_header('s:find_max_folded()')
 
+    "TODO try to make this happen
     if s:branch_end == 0
         call s:d_msg('branch end is on the same line as cursor')
         return 'no branch end'
@@ -179,10 +188,10 @@ function! s:find_max_folded() abort "{{{2
             call s:d_var_msg(max_fold_level, 'max_fold_level')
         endif
 
-        let new_line = s:find_next(line)
+        let new_line = s:find_next(line) "TODO why do we need new_line
         call s:d_var_msg(new_line, "new_line")
 
-        if new_line == 0 "need to check here if it's folded
+        if new_line == s:NO_MORE_FOLDS_FOUND "TODO? need to check here if it's folded
             call s:d_msg("found the last line")
             return max_fold_level
         else
@@ -197,8 +206,6 @@ endfunction "}}}2
 
 function! s:branch_close() abort "{{{2
     let max_unfolded_level = s:find_max_unfolded()
-    " let current_fold_level =  foldlevel(s:current_line)
-
 
     while !s:folded(s:current_line)
         let line = s:current_line
