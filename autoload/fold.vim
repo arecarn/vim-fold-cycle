@@ -124,27 +124,6 @@ function! s:find_next(line) abort "{{{2
 endfunction "}}}2
 
 
-function! s:fold_bottom_up(line) abort "{{{
-    if type(a:line) == type('')
-        let current_line = line(a:line)
-    else
-        let current_line = a:line
-    endif
-
-    let view = winsaveview()
-    execute current_line
-
-    normal! ]z
-    let line = line('.')
-
-    while line('.') > current_line
-        normal! zck
-    endwhile
-
-    call winrestview(view)
-endfunction "}}}
-
-
 function! s:find_max_unfolded() abort "{{{2
     call s:init()
     call s:d_header('s:find_max_unfolded()')
@@ -336,8 +315,6 @@ function! fold#close() abort "{{{2
 
 endfunction "}}}2
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}
-
-
 
 " PUBLIC FUNCTIONS VISUALS {{{
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
