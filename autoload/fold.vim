@@ -12,6 +12,7 @@ set cpo&vim
 " CONSTANTS {{{
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 let s:NO_MORE_FOLDS_FOUND = 0
+let s:NO_BRANCH_END_FOUND = 0
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}
 
@@ -98,6 +99,8 @@ endfunction "}}}2
 
 
 function! s:is_last(line) abort "{{{2
+
+    " TODO use zc and foldclosedend() for this
     " call s:d_header('s:is_last()')
     if type(a:line) == type('')
         let current_line = line(a:line)
@@ -140,28 +143,26 @@ function! s:find_max_unfolded() abort "{{{2
     let line = s:current_line
 
     while line < s:branch_end
-        call s:d_var_msg(line, "line")
-
-        let new_line = s:find_next(line) "TODO why don't we just use line instead of new_line?
-
-        if new_line == s:NO_MORE_FOLDS_FOUND
-            call s:d_var_msg(new_line, "new_line")
-            call s:d_msg("return early")
-            return max_fold_level
-        else
-            let line = new_line
+        if (foldlevel(line) > max_fold_level) && !s:folded(line)
+            let max_fold_level = foldlevel(line)
+            call s:d_var_msg(max_fold_level, 'max_fold_level')
         endif
 
-        if (foldlevel(line) > max_fold_level) && !s:folded(line) "move to top TODO? line to initialized early?
-            let max_fold_level = foldlevel(line)
+        let line  = s:find_next(line)
+        call s:d_var_msg(line , "line")
+
+        if line  == s:NO_MORE_FOLDS_FOUND
+            call s:d_msg("return early: no more folds found")
+            return max_fold_level
         endif
     endwhile
 
     call s:d_msg("return late")
 
-    if s:current_line == line "no nested folds 
-        "TODO I don't think we ever got here think about this
-        return 'no nested folds' 
+    if s:current_line == line
+        "TODO we do get here but should we?
+        call s:d_msg("return late: current_line == line")
+        return 'no nested folds'
     else
         return max_fold_level
     endif
@@ -173,7 +174,7 @@ function! s:find_max_folded() abort "{{{2
     call s:d_header('s:find_max_folded()')
 
     "TODO try to make this happen
-    if s:branch_end == 0
+    if s:branch_end == s:NO_BRANCH_END_FOUND
         call s:d_msg('branch end is on the same line as cursor')
         return 'no branch end'
     endif
@@ -188,17 +189,16 @@ function! s:find_max_folded() abort "{{{2
             call s:d_var_msg(max_fold_level, 'max_fold_level')
         endif
 
-        let new_line = s:find_next(line) "TODO why do we need new_line
-        call s:d_var_msg(new_line, "new_line")
+        let line = s:find_next(line)
+        call s:d_var_msg(line, "line")
 
-        if new_line == s:NO_MORE_FOLDS_FOUND "TODO? need to check here if it's folded
-            call s:d_msg("found the last line")
+        if line == s:NO_MORE_FOLDS_FOUND
+            call s:d_msg("return early: no more folds found")
             return max_fold_level
-        else
-            let line = new_line
         endif
-
     endwhile
+
+    call s:d_msg("return late")
 
     return max_fold_level
 endfunction "}}}2
@@ -218,7 +218,7 @@ function! s:branch_close() abort "{{{2
             endif
             let line = s:find_next(line)
             call s:d_var_msg(line, 'line')
-            if line == 0
+            if line == s:NO_MORE_FOLDS_FOUND
                 call s:d_msg('break from branch_close()')
                 break
             endif
@@ -242,7 +242,7 @@ function! fold#open() abort "{{{2
     endif
 
     if max_folded_level == 'no branch end'
-        call s:d_msg("opening fold :2")
+        call s:d_msg("no branch end found do nothing :2")
         " foldopen
         return
     endif
@@ -261,13 +261,14 @@ function! fold#open() abort "{{{2
 
     let line = s:current_line
     while line < s:branch_end
+        call s:d_var_msg(line, 'line')
         if foldlevel(line) == max_folded_level
             call s:d_msg("opening line " . line)
             execute line . 'foldopen'
         endif
 
         let line = s:find_next(line)
-        if line == 0
+        if line == s:NO_MORE_FOLDS_FOUND
             return
         endif
     endwhile
@@ -315,7 +316,7 @@ function! fold#close() abort "{{{2
             execute line . 'foldclose'
         endif
         let line = s:find_next(line)
-        if line == 0
+        if line == s:NO_MORE_FOLDS_FOUND
             return
         endif
     endwhile
