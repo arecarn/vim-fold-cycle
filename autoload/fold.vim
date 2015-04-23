@@ -9,11 +9,13 @@ let s:save_cpo = &cpo
 set cpo&vim
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}
 
-" CONSTANTS {{{
+" SYMBOLIC VARIABLES {{{
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+let s:NOT_A_FOLD = 0
 let s:NO_MORE_FOLDS_FOUND = 0
 let s:NO_BRANCH_END_FOUND = 0
-
+let s:TRUE = 1
+let s:FALSE = 0
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}
 
 
@@ -71,6 +73,9 @@ function! s:init() abort "{{{2
     let s:branch_end = s:find_branch_end(s:current_line)
     call s:d_var_msg(s:branch_end, 's:branch_end')
 
+    let s:branch_last = s:find_branch_last(s:current_line)
+    call s:d_var_msg(s:branch_last, 's:branch_last')
+
     let s:is_last = s:is_last(s:current_line)
     call s:d_var_msg(s:is_last, 's:is_last')
 endfunction "}}}2
@@ -97,11 +102,8 @@ function! s:do_fold_function(fold_keys, line) abort "{{{2
     endif
 endfunction "}}}2
 
+function! s:find_branch_last(line) abort "{{{2
 
-function! s:is_last(line) abort "{{{2
-
-    " TODO use zc and foldclosedend() for this
-    " call s:d_header('s:is_last()')
     if type(a:line) == type('')
         let current_line = line(a:line)
     else
@@ -109,20 +111,45 @@ function! s:is_last(line) abort "{{{2
     endif
 
     let view = winsaveview()
-    normal! zj
-    normal! zk
-    let line = line('.')
+    if !s:folded(s:current_line)
+        try
+            normal! zc
+            let last = foldclosedend('.')
+            normal! zo
+        catch ^Vim\%((\a\+)\)\=:E490
+            let last = 0
+        endtry
+    endif
     call winrestview(view)
 
-    if  line == current_line
-        return 1
+    return last
+endfunction "}}}2
+
+function! s:is_last(line) abort "{{{2
+
+    if type(a:line) == type('')
+        let current_line = line(a:line)
     else
-        return 0
+        let current_line = a:line
     endif
+
+    let view = winsaveview()
+    if !s:folded(s:current_line)
+        try
+            normal! zc
+            let last = foldclosedend(current_line)
+            normal! zo
+        catch ^Vim\%((\a\+)\)\=:E490
+            let last = 0
+        endtry
+    endif
+    call winrestview(view)
+
+    return  s:current_line == last
 endfunction "}}}2
 
 
-function! s:find_branch_end(line) abort "{{{2 
+function! s:find_branch_end(line) abort "{{{2
     "TODO only valid when on an open fold
     " call s:d_header('s:find_branch_end()')
     return s:do_fold_function(']z', a:line)
