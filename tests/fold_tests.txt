@@ -8,6 +8,14 @@
 3. Close it (4,7,10,19) should remain closed
 4. Open it again an all folds should be closed
 
+1. Completely close the fold on line 1
+2. Open it (4,7,10,19) should remain closed
+3. Open it again on 10 (4,7,13,16,19) should remain closed
+4. Open it on 22
+5. Should fold down to one
+6. Open it on 22
+7. Should have same state as step 3
+
 1
     2
     3
