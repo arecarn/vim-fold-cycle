@@ -58,50 +58,7 @@ function! s:folded(line) abort "{{{2
     return foldclosed(a:line) == -1 ? 0 : 1
 endfunction "}}}2
 
-function! s:init() abort "{{{2
-    call s:d_header('init')
-
-    let s:current_line = line('.')
-    call s:d_var_msg(s:current_line, 's:current_line')
-
-    let s:folded = s:folded('.')
-    call s:d_var_msg(s:folded, 's:folded')
-
-    let s:fold_level = foldlevel(s:current_line)
-    call s:d_var_msg(s:fold_level, 's:fold_level')
-
-    let s:branch_end = s:find_branch_last(s:current_line)
-    call s:d_var_msg(s:branch_end, 's:branch_end')
-
-    let s:branch_last = s:find_branch_last(s:current_line)
-    call s:d_var_msg(s:branch_last, 's:branch_last')
-
-    let s:is_last = s:is_last(s:current_line)
-    call s:d_var_msg(s:is_last, 's:is_last')
-endfunction "}}}2
-
-function! s:do_fold_function(fold_keys, line) abort "{{{2
-
-    if type(a:line) == type('')
-        let current_line = line(a:line)
-    else
-        let current_line = a:line
-    endif
-
-    let view = winsaveview()
-    execute current_line
-    execute 'normal! ' . a:fold_keys
-    let line = line('.')
-    call winrestview(view)
-
-    if  line == current_line
-        return 0
-    else
-        return line
-    endif
-endfunction "}}}2
-
-function! s:find_branch_last(line) abort "{{{2
+function! s:find_branch_end(line) abort "{{{2
 
     if type(a:line) == type('')
         let current_line = line(a:line)
@@ -125,7 +82,27 @@ function! s:find_branch_last(line) abort "{{{2
     return last
 endfunction "}}}2
 
-function! s:is_last(line) abort "{{{2
+function! s:init() abort "{{{2
+    call s:d_header('init')
+
+    let s:current_line = line('.')
+    call s:d_var_msg(s:current_line, 's:current_line')
+
+    let s:folded = s:folded('.')
+    call s:d_var_msg(s:folded, 's:folded')
+
+    let s:fold_level = foldlevel(s:current_line)
+    call s:d_var_msg(s:fold_level, 's:fold_level')
+
+    let s:is_a_fold = s:fold_level != 0
+    call s:d_var_msg(s:fold_level, 's:fold_level')
+
+    let s:branch_end = s:find_branch_end(s:current_line)
+    call s:d_var_msg(s:branch_end, 's:branch_end')
+
+endfunction "}}}2
+
+function! s:do_fold_function(fold_keys, line) abort "{{{2
 
     if type(a:line) == type('')
         let current_line = line(a:line)
@@ -133,27 +110,17 @@ function! s:is_last(line) abort "{{{2
         let current_line = a:line
     endif
 
-
     let view = winsaveview()
-    let last = 0 "TODO use symbolic constant
-    if !s:folded(s:current_line)
-        try
-            normal! zc
-            let last = foldclosedend(current_line)
-            normal! zo
-        catch ^Vim\%((\a\+)\)\=:E490
-            let last = 0
-        endtry
-    endif
+    execute current_line
+    execute 'normal! ' . a:fold_keys
+    let line = line('.')
     call winrestview(view)
 
-    return  s:current_line == last
-endfunction "}}}2
-
-function! s:find_branch_end(line) abort "{{{2
-    "TODO only valid when on an open fold
-    " call s:d_header('s:find_branch_end()')
-    return s:do_fold_function(']z', a:line)
+    if  line == current_line
+        return 0
+    else
+        return line
+    endif
 endfunction "}}}2
 
 function! s:find_next(line) abort "{{{2
