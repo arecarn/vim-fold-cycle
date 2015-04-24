@@ -14,6 +14,7 @@ set cpo&vim
 let s:NOT_A_FOLD = 0
 let s:NO_MORE_FOLDS_FOUND = 0
 let s:NO_BRANCH_END_FOUND = 0
+let s:NO_NESTED_FOLDS = 0
 let s:TRUE = 1
 let s:FALSE = 0
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}
@@ -70,7 +71,7 @@ function! s:init() abort "{{{2
     let s:fold_level = foldlevel(s:current_line)
     call s:d_var_msg(s:fold_level, 's:fold_level')
 
-    let s:branch_end = s:find_branch_end(s:current_line)
+    let s:branch_end = s:find_branch_last(s:current_line)
     call s:d_var_msg(s:branch_end, 's:branch_end')
 
     let s:branch_last = s:find_branch_last(s:current_line)
@@ -111,13 +112,14 @@ function! s:find_branch_last(line) abort "{{{2
     endif
 
     let view = winsaveview()
+    let last = 0
     if !s:folded(s:current_line)
         try
             normal! zc
             let last = foldclosedend('.')
             normal! zo
         catch ^Vim\%((\a\+)\)\=:E490
-            let last = 0
+            let last = 0 "TODO use symbolic constant
         endtry
     endif
     call winrestview(view)
@@ -133,7 +135,9 @@ function! s:is_last(line) abort "{{{2
         let current_line = a:line
     endif
 
+
     let view = winsaveview()
+    let last = 0 "TODO use symbolic constant
     if !s:folded(s:current_line)
         try
             normal! zc
@@ -189,7 +193,7 @@ function! s:find_max_unfolded() abort "{{{2
     if s:current_line == line
         "TODO we do get here but should we?
         call s:d_msg("return late: current_line == line")
-        return 'no nested folds'
+        return s:NO_NESTED_FOLDS
     else
         return max_fold_level
     endif
@@ -203,7 +207,7 @@ function! s:find_max_folded() abort "{{{2
     "TODO try to make this happen
     if s:branch_end == s:NO_BRANCH_END_FOUND
         call s:d_msg('branch end is on the same line as cursor')
-        return 'no branch end'
+        return s:NO_BRANCH_END_FOUND
     endif
 
     let line = s:current_line
@@ -238,11 +242,17 @@ function! s:branch_close() abort "{{{2
         let line = s:current_line
 
 
-        while line < s:branch_end
+        while line <= s:branch_end
             if foldlevel(line) == max_unfolded_level
                 call s:d_msg('folding line ' . line)
                 execute line . 'foldclose'
             endif
+
+            if max_unfolded_level == s:NO_NESTED_FOLDS
+                foldclose
+                return
+            endif
+
             let line = s:find_next(line)
             call s:d_var_msg(line, 'line')
             if line == s:NO_MORE_FOLDS_FOUND
@@ -262,17 +272,17 @@ function! fold#open() abort "{{{2
     let max_folded_level = s:find_max_folded()
     call s:d_var_msg(max_folded_level, 'max_folded_level')
 
+
+
     if s:folded
         call s:d_msg("opening fold :1")
         foldopen
         return
-    endif
-
-    if max_folded_level == 'no branch end'
-        call s:d_msg("no branch end found do nothing :2")
-        " foldopen
+    elseif max_folded_level == s:NO_BRANCH_END_FOUND
+        call s:d_msg("do nothing :1")
         return
     endif
+
 
     if max_folded_level == -1 || max_folded_level == 0
         call s:d_msg("closing all folds")
@@ -294,6 +304,7 @@ function! fold#open() abort "{{{2
             execute line . 'foldopen'
         endif
 
+
         let line = s:find_next(line)
         if line == s:NO_MORE_FOLDS_FOUND
             return
@@ -309,7 +320,8 @@ function! fold#close() abort "{{{2
     let max_unfolded_level = s:find_max_unfolded()
     call s:d_var_msg(max_unfolded_level, 'max_unfolded_level')
 
-    if max_unfolded_level == 'no nested folds' && !s:folded
+    if max_unfolded_level == s:NO_NESTED_FOLDS && !s:folded
+        foldclose
         return
     else
         foldopen!
