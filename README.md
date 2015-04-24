@@ -1,3 +1,5 @@
+Fold Cycling
+============
 Cycle open and close folds in a org-mode inspired way.
 
 Usage
@@ -7,10 +9,23 @@ Usage
 | normal | <CR>        | `<Plug>(fold-open)`  | Cycle open nested folds  |
 | normal | <BS>        | `<Plug>(fold-close)` | Cycle close nested folds |
 
+Customization
+-------------
+Example:
+```vim
+nmap <Tab><Tab> <Plug>(fold-open)
+nmap <S-Tab><S-Tab> <Plug>(fold-close)
+```
 
+------------------------------------------------------------------------------
 
-provides the
+Fold Style
+==========
 
+Also provides alternative to the default foldtext and a new foldmethod
+
+Usage
+-----
 * `fold#clean_fold_text(foldchar)`
     * cleaner alternative to default fold text, still including number of folded lines
     * `set foldtext=fold#clean_fold_text('_')`
@@ -25,10 +40,3 @@ provides the
         * `set foldmethod=expr`
         * `set foldexpr=fold#get_clean_fold_expr(v:lnum)`
 
-Customization
--------------
-Example:
-```vim
-nmap <Tab><Tab> <Plug>(fold-open)
-nmap <S-Tab><S-Tab> <Plug>(fold-close)
-```
