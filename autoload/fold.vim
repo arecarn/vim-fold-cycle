@@ -11,6 +11,9 @@ set cpo&vim
 
 " SYMBOLIC VARIABLES {{{
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+"TODO max_folded_level/max_unfolded_level can be 0 so I don't think these
+"should be 0
 let s:NOT_A_FOLD = 0
 let s:NO_MORE_FOLDS_FOUND = 0
 let s:NO_BRANCH_END_FOUND = 0
@@ -18,8 +21,6 @@ let s:NO_NESTED_FOLDS = 0
 let s:TRUE = 1
 let s:FALSE = 0
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}
-
-
 
 " PRIVATE FUNCTIONS DEBUG {{{
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -272,8 +273,6 @@ function! fold#open() abort "{{{2
     let max_folded_level = s:find_max_folded()
     call s:d_var_msg(max_folded_level, 'max_folded_level')
 
-
-
     if s:folded
         call s:d_msg("opening fold :1")
         foldopen
@@ -281,16 +280,7 @@ function! fold#open() abort "{{{2
     elseif max_folded_level == s:NO_BRANCH_END_FOUND
         call s:d_msg("do nothing :1")
         return
-    endif
-
-
-    if max_folded_level == -1 || max_folded_level == 0
-        call s:d_msg("closing all folds")
-        call s:branch_close()
-        return
-    endif
-
-    if max_folded_level == s:fold_level
+    elseif max_folded_level == s:fold_level
         call s:d_msg("closing all folds")
         call s:branch_close()
         return
@@ -304,7 +294,6 @@ function! fold#open() abort "{{{2
             execute line . 'foldopen'
         endif
 
-
         let line = s:find_next(line)
         if line == s:NO_MORE_FOLDS_FOUND
             return
@@ -314,8 +303,6 @@ endfunction "}}}2
 
 
 function! fold#close() abort "{{{2
-    " call s:D_header('fold#close()')
-
 
     let max_unfolded_level = s:find_max_unfolded()
     call s:d_var_msg(max_unfolded_level, 'max_unfolded_level')
@@ -327,20 +314,14 @@ function! fold#close() abort "{{{2
         foldopen!
     endif
 
-    if max_unfolded_level == s:fold_level && s:folded
-        foldopen!
-        return
-    elseif max_unfolded_level == s:fold_level
-        foldclose
-        return
-    endif
-
-
-    if ((max_unfolded_level == 'no_nested_folds') || (max_unfolded_level == -1))  && s:folded == 1
-        foldopen!
+    if max_unfolded_level == s:fold_level
+        if s:folded
+            foldopen!
+        else
+            foldclose
+        endif
         return
     endif
-
 
     if max_unfolded_level == 0
         call s:d_msg("opening all folds")
