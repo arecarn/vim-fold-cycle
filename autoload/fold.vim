@@ -13,12 +13,9 @@ set cpo&vim
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "TODO max_folded_level/max_unfolded_level can be 0 so I don't think these
 "should be 0
-let s:NOT_A_FOLD = 0
 let s:NO_MORE_FOLDS_FOUND = 0
 let s:NO_BRANCH_END_FOUND = 0
 let s:NO_NESTED_FOLDS = 0
-let s:TRUE = 1
-let s:FALSE = 0
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}
 
 " PRIVATE FUNCTIONS DEBUG {{{
