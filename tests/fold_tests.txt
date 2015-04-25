@@ -1,20 +1,28 @@
 1. Completely close the fold on line 1
-2. Open it (4,7,10,19) should remain closed
-3. Open it again (13,16) should remain closed
+2. Open it 4,7,10,19 should remain closed
+3. Open it again 13,16 should remain closed
+4. Open it again an no folds should be closed
+
+1. Completely close the fold on line 22
+2. Open it 4,7,10,19 should remain closed
+3. Open it again 13,16 should remain closed
 4. Open it again an no folds should be closed
 
 1. Completely open the fold on line 1
-2. Close it again (13,16) should remain closed
-3. Close it (4,7,10,19) should remain closed
-4. Open it again an all folds should be closed
+2. Close it again 13,16 should remain closed
+3. Close it 4,7,10,19 should remain closed
+4. Open it again all folds should be closed
 
 1. Completely close the fold on line 1
-2. Open it (4,7,10,19) should remain closed
-3. Open it again on 10 (4,7,13,16,19) should remain closed
-4. Open it on 22
-5. Should fold down to one
-6. Open it on 22
-7. Should have same state as step 3
+2. Open it 4,7,10,19 should remain closed
+3. Open it again on 10 4,7,13,16,19 should remain closed
+4. Open it on 22 all fold should be open
+
+1. Completely open the all the folds
+2. Close 4,7,19
+3. Close it on 22 4,7,13,16,19 should be closed
+4. Close it on 22 4,7,10,19 should be closed
+4. Close it on 22 1 should be closed
 
 1
     2
@@ -65,7 +73,6 @@ Trying to open/close 7 should only close 5-7
 ------------------------------------------------------------------------------
 
 NOTE: Keep this test at the bottom of the file
-is result of s:is_last(...) should be the same on 2 and 4
 
 1
     2

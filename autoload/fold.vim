@@ -48,39 +48,14 @@ endfunction "}}}2
 let s:NOT_A_FOLD = -1
 let s:NO_MORE_FOLDS_FOUND = 0
 let s:NO_BRANCH_END_FOUND = 0
-let s:NO_NESTED_FOLDS = 0
+let s:NO_NESTED_FOLDS = -2
+
+let s:START = 0
+let s:END  = 1
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}2
 
 " PRIVATE FUNCTIONS {{{2
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-function! s:folded(line) abort "{{{3
-    return foldclosed(a:line) == -1 ? 0 : 1
-endfunction "}}}3
-
-function! s:find_branch_end(line) abort "{{{3
-
-    if type(a:line) == type('')
-        let current_line = line(a:line)
-    else
-        let current_line = a:line
-    endif
-
-    let view = winsaveview()
-    let last = 0
-    if !s:folded(s:current_line)
-        try
-            normal! zc
-            let last = foldclosedend('.')
-            normal! zo
-        catch ^Vim\%((\a\+)\)\=:E490
-            let last = 0 "TODO use symbolic constant
-        endtry
-    endif
-    call winrestview(view)
-
-    return last
-endfunction "}}}3
-
 function! s:init() abort "{{{3
     call s:d_header('init')
 
@@ -100,6 +75,9 @@ function! s:init() abort "{{{3
     let s:folded = s:folded('.')
     call s:d_var_msg(s:folded, 's:folded')
 
+    let s:branch_start = s:find_branch_start(s:current_line)
+    call s:d_var_msg(s:branch_start, 's:branch_start')
+
     let s:branch_end = s:find_branch_end(s:current_line)
     call s:d_var_msg(s:branch_end, 's:branch_end')
 
@@ -112,21 +90,60 @@ function! s:init() abort "{{{3
     return 1
 endfunction "}}}3
 
-function! s:do_fold_function(fold_keys, line) abort "{{{3
+function! s:folded(line) abort "{{{3
+    return foldclosed(a:line) == -1 ? 0 : 1
+endfunction "}}}3
 
+function! s:handle_line(line) abort "{{{3
     if type(a:line) == type('')
-        let current_line = line(a:line)
+        let line = line(a:line)
     else
-        let current_line = a:line
+        let line = a:line
     endif
+    return line
+endfunction "}}}3
+
+function! s:find_branch_end(line) abort "{{{3
+    return s:do_find_branch(a:line, s:END)
+endfunction "}}}3
+
+function! s:find_branch_start(line) abort "{{{3
+    return s:do_find_branch(a:line, s:START)
+endfunction "}}}3
+
+function! s:do_find_branch(line, type) abort "{{{3
+    let line = s:handle_line(a:line)
 
     let view = winsaveview()
-    execute current_line
+    let value = 0
+    if !s:folded(line)
+        try
+            normal! zc
+            if a:type == s:START
+                let value = foldclosed(line)
+            elseif a:type == s:END
+                let value = foldclosedend(line)
+            endif
+            normal! zo
+        catch ^Vim\%((\a\+)\)\=:E490
+            let value = 0 "TODO use symbolic constant
+        endtry
+    endif
+    call winrestview(view)
+
+    return value
+endfunction "}}}3
+
+function! s:do_fold_function(fold_keys, line) abort "{{{3
+    let line = s:handle_line(a:line)
+
+    let view = winsaveview()
+    execute line
     execute 'normal! ' . a:fold_keys
     let line = line('.')
     call winrestview(view)
 
-    if  line == current_line
+    if  line == a:line
         return 0
     else
         return line
@@ -142,7 +159,7 @@ function! s:find_max_open_fold_level() abort "{{{3
     call s:d_header('s:find_max_open_fold_level()')
 
     let max_fold_level = s:fold_level
-    let line = s:current_line
+    let line = s:branch_start
 
     while line < s:branch_end
         if (foldlevel(line) > max_fold_level) && !s:folded(line)
@@ -161,9 +178,8 @@ function! s:find_max_open_fold_level() abort "{{{3
 
     call s:d_msg("return late")
 
-    if s:current_line == line
-        "TODO we do get here but should we?
-        call s:d_msg("return late: current_line == line")
+    if s:branch_start == line
+        call s:d_msg("return late: s:branch_start == line")
         return s:NO_NESTED_FOLDS
     else
         return max_fold_level
@@ -179,7 +195,7 @@ function! s:find_max_closed_fold_level() abort "{{{3
         return s:NOT_A_FOLD
     endif
 
-    let line = s:current_line
+    let line = s:branch_start
     let max_fold_level = s:fold_level
 
     while line < s:branch_end
@@ -203,32 +219,36 @@ function! s:find_max_closed_fold_level() abort "{{{3
     return max_fold_level
 endfunction "}}}3
 
-function! s:branch_close() abort "{{{3
+function! s:branch_close_all() abort "{{{3
 
-    let max_open_fold_level = s:max_open_fold_level
+    let level = s:max_open_fold_level
     while !s:folded(s:current_line)
-        let line = s:current_line
+        call s:branch_close(level)
+        let level = level - 1
+    endwhile
+endfunction "}}}3
 
+function! s:branch_close(level) abort "{{{3
 
-        while line <= s:branch_end
-            if foldlevel(line) == max_open_fold_level
-                call s:d_msg('folding line ' . line)
-                execute line . 'foldclose'
-            endif
+    let line = s:branch_start
 
-            if max_open_fold_level == s:NO_NESTED_FOLDS
-                foldclose
-                return
-            endif
+    if a:level == s:NO_NESTED_FOLDS
+        foldclose
+        return
+    endif
 
-            let line = s:find_next(line)
-            call s:d_var_msg(line, 'line')
-            if line == s:NO_MORE_FOLDS_FOUND
-                call s:d_msg('break from branch_close()')
-                break
-            endif
-        endwhile
-        let max_open_fold_level = max_open_fold_level - 1
+    while line <= s:branch_end
+        if foldlevel(line) == a:level && !s:folded(line)
+            call s:d_msg('folding line ' . line)
+            execute line . 'foldclose'
+        endif
+
+        let line = s:find_next(line)
+        call s:d_var_msg(line, 'line')
+        if line == s:NO_MORE_FOLDS_FOUND
+            call s:d_msg('break from branch_close()')
+            return
+        endif
     endwhile
 endfunction "}}}3
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}2
@@ -237,6 +257,7 @@ endfunction "}}}3
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 function! fold#open() abort "{{{3
     if !s:init()
+        call s:d_msg("init() failed")
         return
     endif
 
@@ -245,25 +266,23 @@ function! fold#open() abort "{{{3
         call s:d_msg("opening fold :1")
         foldopen
         return
-    elseif s:max_closed_fold_level == s:NOT_A_FOLD
-        call s:d_msg("do nothing no branch end found")
-        return
     elseif s:max_closed_fold_level == s:fold_level
         call s:d_msg("closing all folds")
-        call s:branch_close()
+        call s:branch_close_all()
         return
     endif
 
-    let line = s:current_line
+    let line = s:branch_start
     while line < s:branch_end
         call s:d_var_msg(line, 'line')
-        if foldlevel(line) == s:max_closed_fold_level
+        if foldlevel(line) <= s:max_closed_fold_level && s:folded(line)
             call s:d_msg("opening line " . line)
             execute line . 'foldopen'
         endif
 
         let line = s:find_next(line)
         if line == s:NO_MORE_FOLDS_FOUND
+            call s:d_msg("no more folds" . line)
             return
         endif
     endwhile
@@ -271,15 +290,13 @@ endfunction "}}}3
 
 function! fold#close() abort "{{{3
     if !s:init()
+        call s:d_msg("init() failed")
         return
     endif
 
     if s:folded
         call s:d_msg("opening all folds: is folded")
         foldopen!
-        return
-    elseif s:max_open_fold_level == s:NOT_A_FOLD
-        call s:d_msg("do nothing no branch end found")
         return
     elseif s:max_open_fold_level == s:NO_NESTED_FOLDS
         call s:d_msg("opening all folds: s:max_open_fold_level = s:NO_NESTED_FOLDS")
@@ -295,19 +312,7 @@ function! fold#close() abort "{{{3
         return
     endif
 
-
-    let line = line('.')
-    while line < s:branch_end
-        if foldlevel(line) == s:max_open_fold_level
-            call s:d_msg('folding line ' . line)
-            execute line . 'foldclose'
-        endif
-        let line = s:find_next(line)
-        if line == s:NO_MORE_FOLDS_FOUND
-            return
-        endif
-    endwhile
-
+    call s:branch_close(s:max_open_fold_level)
 endfunction "}}}3
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}2
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}1
