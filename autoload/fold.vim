@@ -3,23 +3,12 @@
 " License: WTFPL
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-" BOILER PLATE {{{
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""{{{1
 let s:save_cpo = &cpo
 set cpo&vim
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}1
 
-" SYMBOLIC VARIABLES {{{
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-"TODO max_closed_fold_level/max_open_fold_level can be 0 so I don't think these
-"should be 0
-let s:NOT_A_FOLD = -1
-let s:NO_MORE_FOLDS_FOUND = 0
-let s:NO_BRANCH_END_FOUND = 0
-let s:NO_NESTED_FOLDS = 0
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}
-
-" PRIVATE FUNCTIONS DEBUG {{{
+" PRIVATE FUNCTIONS DEBUG {{{1
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 function! s:d_header(text) abort "{{{2
     try
@@ -48,15 +37,27 @@ function! s:d_msg(text) abort "{{{2
     catch
     endtry
 endfunction "}}}2
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}1
 
-" PRIVATE FUNCTIONS {{{
+" FOLD CYCLEING {{{1
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-function! s:folded(line) abort "{{{2
-    return foldclosed(a:line) == -1 ? 0 : 1
-endfunction "}}}2
+" SYMBOLIC VARIABLES {{{2
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+"TODO max_closed_fold_level/max_open_fold_level can be 0 so I don't think these
+"should be 0
+let s:NOT_A_FOLD = -1
+let s:NO_MORE_FOLDS_FOUND = 0
+let s:NO_BRANCH_END_FOUND = 0
+let s:NO_NESTED_FOLDS = 0
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}2
 
-function! s:find_branch_end(line) abort "{{{2
+" PRIVATE FUNCTIONS {{{2
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+function! s:folded(line) abort "{{{3
+    return foldclosed(a:line) == -1 ? 0 : 1
+endfunction "}}}3
+
+function! s:find_branch_end(line) abort "{{{3
 
     if type(a:line) == type('')
         let current_line = line(a:line)
@@ -78,9 +79,9 @@ function! s:find_branch_end(line) abort "{{{2
     call winrestview(view)
 
     return last
-endfunction "}}}2
+endfunction "}}}3
 
-function! s:init() abort "{{{2
+function! s:init() abort "{{{3
     call s:d_header('init')
 
     let s:current_line = line('.')
@@ -109,9 +110,9 @@ function! s:init() abort "{{{2
     call s:d_var_msg(s:max_open_fold_level, 's:max_open_fold_level')
 
     return 1
-endfunction "}}}2
+endfunction "}}}3
 
-function! s:do_fold_function(fold_keys, line) abort "{{{2
+function! s:do_fold_function(fold_keys, line) abort "{{{3
 
     if type(a:line) == type('')
         let current_line = line(a:line)
@@ -130,14 +131,14 @@ function! s:do_fold_function(fold_keys, line) abort "{{{2
     else
         return line
     endif
-endfunction "}}}2
+endfunction "}}}3
 
-function! s:find_next(line) abort "{{{2
+function! s:find_next(line) abort "{{{3
     " call s:d_header('s:find_next()')
     return s:do_fold_function('zj', a:line)
-endfunction "}}}2
+endfunction "}}}3
 
-function! s:find_max_open_fold_level() abort "{{{2
+function! s:find_max_open_fold_level() abort "{{{3
     call s:d_header('s:find_max_open_fold_level()')
 
     let max_fold_level = s:fold_level
@@ -167,9 +168,9 @@ function! s:find_max_open_fold_level() abort "{{{2
     else
         return max_fold_level
     endif
-endfunction "}}}2
+endfunction "}}}3
 
-function! s:find_max_closed_fold_level() abort "{{{2
+function! s:find_max_closed_fold_level() abort "{{{3
     call s:d_header('s:find_max_closed_fold_level()')
 
     "TODO try to make this happen
@@ -200,9 +201,9 @@ function! s:find_max_closed_fold_level() abort "{{{2
     call s:d_msg("return late")
 
     return max_fold_level
-endfunction "}}}2
+endfunction "}}}3
 
-function! s:branch_close() abort "{{{2
+function! s:branch_close() abort "{{{3
 
     let max_open_fold_level = s:max_open_fold_level
     while !s:folded(s:current_line)
@@ -229,12 +230,12 @@ function! s:branch_close() abort "{{{2
         endwhile
         let max_open_fold_level = max_open_fold_level - 1
     endwhile
-endfunction "}}}2
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}
+endfunction "}}}3
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}2
 
-" PUBLIC FUNCTIONS MAPPINGS {{{
+" PUBLIC FUNCTIONS {{{2
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-function! fold#open() abort "{{{2
+function! fold#open() abort "{{{3
     if !s:init()
         return
     endif
@@ -266,9 +267,9 @@ function! fold#open() abort "{{{2
             return
         endif
     endwhile
-endfunction "}}}2
+endfunction "}}}3
 
-function! fold#close() abort "{{{2
+function! fold#close() abort "{{{3
     if !s:init()
         return
     endif
@@ -307,12 +308,15 @@ function! fold#close() abort "{{{2
         endif
     endwhile
 
-endfunction "}}}2
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}
+endfunction "}}}3
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}2
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}1
 
-" PUBLIC FUNCTIONS VISUALS {{{
+" VISUALS {{{1
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-function! fold#clean_fold_text(foldchar) "{{{2
+" PUBLIC FUNCTIONS {{{2
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+function! fold#clean_fold_text(foldchar) "{{{3
     " call so:d_header('fold#clean_fold()')
     "TODO handle wide chars with visual col
     let line = getline(v:foldstart)
@@ -330,9 +334,9 @@ function! fold#clean_fold_text(foldchar) "{{{2
     let foldtextlength = strlen(substitute(foldtextstart . foldtextend, '.', 'x', 'g')) + &foldcolumn
 
     return foldtextstart . repeat(a:foldchar, winwidth(0)-foldtextlength) . foldtextend
-endfunction "}}}2
+endfunction "}}}3
 
-function! fold#cleanest_fold_text() "{{{2
+function! fold#cleanest_fold_text() "{{{3
     " call so:d_header('fold#clean_fold()')
     "TODO handle wide chars with visual col
     let line = getline(v:foldstart)
@@ -350,9 +354,9 @@ function! fold#cleanest_fold_text() "{{{2
     let line = substitute(line, '\t', ts, 'g')
 
     return line . repeat(' ', winwidth(0)-len(line))
-endfunction "}}}2
+endfunction "}}}3
 
-function! fold#get_clean_fold_expr(lnum) "{{{2
+function! fold#get_clean_fold_expr(lnum) "{{{3
     " call s:d_header('fold#get_potion_fold()')
     if getline(a:lnum) =~? '\v^\s*$'
         return '-1'
@@ -368,16 +372,16 @@ function! fold#get_clean_fold_expr(lnum) "{{{2
     elseif next_indent > this_indent
         return '>' . next_indent
     endif
-endfunction "}}}2
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}
+endfunction "}}}3
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}2
 
-" PRIVATE FUNCTIONS VISUALS {{{
+" PRIVATE FUNCTIONS {{{2
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-function! s:indent_level(lnum) "{{{2
+function! s:indent_level(lnum) "{{{3
     return indent(a:lnum) / &shiftwidth
-endfunction "}}}2
+endfunction "}}}3
 
-function! s:next_non_blank_line(lnum) "{{{2
+function! s:next_non_blank_line(lnum) "{{{3
     let numlines = line('$')
     let current = a:lnum + 1
 
@@ -390,13 +394,13 @@ function! s:next_non_blank_line(lnum) "{{{2
     endwhile
 
     return -2
-endfunction "}}}2
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}
+endfunction "}}}3
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}2
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}1
 
-" BOILER PLATE {{{
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""{{{1
 let &cpo = s:save_cpo
 unlet s:save_cpo
 " vim:foldmethod=marker
 " vim:textwidth=78
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}1
