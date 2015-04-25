@@ -11,7 +11,7 @@ set cpo&vim
 
 " SYMBOLIC VARIABLES {{{
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-"TODO max_folded_level/max_unfolded_level can be 0 so I don't think these
+"TODO max_closed_fold_level/max_open_fold_level can be 0 so I don't think these
 "should be 0
 let s:NOT_A_FOLD = -1
 let s:NO_MORE_FOLDS_FOUND = 0
@@ -86,18 +86,29 @@ function! s:init() abort "{{{2
     let s:current_line = line('.')
     call s:d_var_msg(s:current_line, 's:current_line')
 
-    let s:folded = s:folded('.')
-    call s:d_var_msg(s:folded, 's:folded')
-
     let s:fold_level = foldlevel(s:current_line)
     call s:d_var_msg(s:fold_level, 's:fold_level')
 
     let s:is_a_fold = s:fold_level != 0
-    call s:d_var_msg(s:fold_level, 's:fold_level')
+    call s:d_var_msg(s:is_a_fold, 's:is_a_fold')
+
+    if !s:is_a_fold
+        return 0
+    endif
+
+    let s:folded = s:folded('.')
+    call s:d_var_msg(s:folded, 's:folded')
 
     let s:branch_end = s:find_branch_end(s:current_line)
     call s:d_var_msg(s:branch_end, 's:branch_end')
 
+    let s:max_closed_fold_level = s:find_max_closed_fold_level()
+    call s:d_var_msg(s:max_closed_fold_level, 's:max_closed_fold_level')
+
+    let s:max_open_fold_level = s:find_max_open_fold_level()
+    call s:d_var_msg(s:max_open_fold_level, 's:max_open_fold_level')
+
+    return 1
 endfunction "}}}2
 
 function! s:do_fold_function(fold_keys, line) abort "{{{2
@@ -126,9 +137,8 @@ function! s:find_next(line) abort "{{{2
     return s:do_fold_function('zj', a:line)
 endfunction "}}}2
 
-function! s:find_max_unfolded() abort "{{{2
-    call s:init()
-    call s:d_header('s:find_max_unfolded()')
+function! s:find_max_open_fold_level() abort "{{{2
+    call s:d_header('s:find_max_open_fold_level()')
 
     let max_fold_level = s:fold_level
     let line = s:current_line
@@ -159,9 +169,8 @@ function! s:find_max_unfolded() abort "{{{2
     endif
 endfunction "}}}2
 
-function! s:find_max_folded() abort "{{{2
-    call s:init()
-    call s:d_header('s:find_max_folded()')
+function! s:find_max_closed_fold_level() abort "{{{2
+    call s:d_header('s:find_max_closed_fold_level()')
 
     "TODO try to make this happen
     if s:branch_end == s:NO_BRANCH_END_FOUND
@@ -194,19 +203,19 @@ function! s:find_max_folded() abort "{{{2
 endfunction "}}}2
 
 function! s:branch_close() abort "{{{2
-    let max_unfolded_level = s:find_max_unfolded()
 
+    let max_open_fold_level = s:max_open_fold_level
     while !s:folded(s:current_line)
         let line = s:current_line
 
 
         while line <= s:branch_end
-            if foldlevel(line) == max_unfolded_level
+            if foldlevel(line) == max_open_fold_level
                 call s:d_msg('folding line ' . line)
                 execute line . 'foldclose'
             endif
 
-            if max_unfolded_level == s:NO_NESTED_FOLDS
+            if max_open_fold_level == s:NO_NESTED_FOLDS
                 foldclose
                 return
             endif
@@ -218,7 +227,7 @@ function! s:branch_close() abort "{{{2
                 break
             endif
         endwhile
-        let max_unfolded_level = max_unfolded_level - 1
+        let max_open_fold_level = max_open_fold_level - 1
     endwhile
 endfunction "}}}2
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}
@@ -226,18 +235,19 @@ endfunction "}}}2
 " PUBLIC FUNCTIONS MAPPINGS {{{
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 function! fold#open() abort "{{{2
-    " call s:d_header('fold#open()')
-    let max_folded_level = s:find_max_folded()
-    call s:d_var_msg(max_folded_level, 'max_folded_level')
+    if !s:init()
+        return
+    endif
+
 
     if s:folded
         call s:d_msg("opening fold :1")
         foldopen
         return
-    elseif max_folded_level == s:NOT_A_FOLD
+    elseif s:max_closed_fold_level == s:NOT_A_FOLD
         call s:d_msg("do nothing no branch end found")
         return
-    elseif max_folded_level == s:fold_level
+    elseif s:max_closed_fold_level == s:fold_level
         call s:d_msg("closing all folds")
         call s:branch_close()
         return
@@ -246,7 +256,7 @@ function! fold#open() abort "{{{2
     let line = s:current_line
     while line < s:branch_end
         call s:d_var_msg(line, 'line')
-        if foldlevel(line) == max_folded_level
+        if foldlevel(line) == s:max_closed_fold_level
             call s:d_msg("opening line " . line)
             execute line . 'foldopen'
         endif
@@ -259,27 +269,27 @@ function! fold#open() abort "{{{2
 endfunction "}}}2
 
 function! fold#close() abort "{{{2
-
-    let max_unfolded_level = s:find_max_unfolded()
-    call s:d_var_msg(max_unfolded_level, 'max_unfolded_level')
+    if !s:init()
+        return
+    endif
 
     if s:folded
         call s:d_msg("opening all folds: is folded")
         foldopen!
         return
-    elseif max_unfolded_level == s:NOT_A_FOLD
+    elseif s:max_open_fold_level == s:NOT_A_FOLD
         call s:d_msg("do nothing no branch end found")
         return
-    elseif max_unfolded_level == s:NO_NESTED_FOLDS
-        call s:d_msg("opening all folds: max_unfolded_level = s:NO_NESTED_FOLDS")
+    elseif s:max_open_fold_level == s:NO_NESTED_FOLDS
+        call s:d_msg("opening all folds: s:max_open_fold_level = s:NO_NESTED_FOLDS")
         foldclose
         return
-    elseif max_unfolded_level == s:fold_level
-        call s:d_msg("opening all folds: max_unfolded_level = s:fold_level")
+    elseif s:max_open_fold_level == s:fold_level
+        call s:d_msg("opening all folds: s:max_open_fold_level = s:fold_level")
         foldclose
         return
-    elseif max_unfolded_level == 0
-        call s:d_msg("opening all folds: max_unfolded_level = 0")
+    elseif s:max_open_fold_level == 0
+        call s:d_msg("opening all folds: s:max_open_fold_level = 0")
         foldopen!
         return
     endif
@@ -287,7 +297,7 @@ function! fold#close() abort "{{{2
 
     let line = line('.')
     while line < s:branch_end
-        if foldlevel(line) == max_unfolded_level
+        if foldlevel(line) == s:max_open_fold_level
             call s:d_msg('folding line ' . line)
             execute line . 'foldclose'
         endif
