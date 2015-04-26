@@ -1,6 +1,6 @@
 
 1. set foldmethod = marker
-2.
+2. Shouldn't be able to open/close line 1 (it is a un-foldable fold)
 
 1 {{{1
 2 {{{1
