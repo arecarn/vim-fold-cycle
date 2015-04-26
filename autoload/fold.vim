@@ -81,6 +81,10 @@ function! s:init() abort "{{{3
     let s:branch_end = s:find_branch_end(s:current_line)
     call s:d_var_msg(s:branch_end, 's:branch_end')
 
+    if s:branch_end == s:NOT_A_FOLD || s:branch_start == s:NOT_A_FOLD
+        return
+    endif
+
     let s:max_closed_fold_level = s:find_max_closed_fold_level()
     call s:d_var_msg(s:max_closed_fold_level, 's:max_closed_fold_level')
 

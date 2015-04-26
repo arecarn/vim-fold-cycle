@@ -1,3 +1,16 @@
+
+1. set foldmethod = marker
+2.
+
+1 {{{1
+2 {{{1
+3 {{{2
+4 {{{3
+5 {{{4
+6 }}}1
+
+------------------------------------------------------------------------------
+
 1. Completely close the fold on line 1
 2. Open it 4,7,10,19 should remain closed
 3. Open it again 13,16 should remain closed
