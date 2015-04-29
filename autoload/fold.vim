@@ -120,20 +120,27 @@ function! s:do_find_branch(line, type) abort "{{{3
 
     let view = winsaveview()
     let value = 0
+    if !s:folded(line)
+        let s:close_flag = s:TRUE
+    endif
     try
-        if !s:folded(line)
+        if s:close_flag
             normal! zc
         endif
+
         if a:type == s:START
             let value = foldclosed(line)
         elseif a:type == s:END
             let value = foldclosedend(line)
         endif
-        if !s:folded(line)
+
+        if s:close_flag
             normal! zo
         endif
+
     catch ^Vim\%((\a\+)\)\=:E490
         let value = 0 "TODO use symbolic constant
+
     endtry
     call winrestview(view)
 
