@@ -56,6 +56,13 @@ let s:END  = 1
 
 " PRIVATE FUNCTIONS {{{2
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+function! s:open_branch() abort "{{{3
+    execute s:branch_start . ',' . s:branch_end . ' foldopen!'
+endfunction "}}}3
+
+function! s:close_branch() abort "{{{3
+    execute s:branch_start . ',' . s:branch_end . ' foldclose!'
+endfunction "}}}3
 function! s:init() abort "{{{3
     call s:d_header('init')
 
@@ -180,10 +187,10 @@ function! s:find_max_open_fold_level() abort "{{{3
             call s:d_var_msg(max_fold_level, 'max_fold_level')
         endif
 
-        let line  = s:find_next(line)
+        let line = s:find_next(line)
         call s:d_var_msg(line , "line")
 
-        if line  == s:NO_MORE_FOLDS_FOUND
+        if line == s:NO_MORE_FOLDS_FOUND
             call s:d_msg("return early: no more folds found")
             return max_fold_level
         endif
@@ -243,12 +250,12 @@ endfunction "}}}3
 
 function! s:branch_close(level) abort "{{{3
 
-    let line = s:branch_start
-
     if a:level == s:NO_NESTED_FOLDS
         foldclose
         return
     endif
+
+    let line = s:branch_start
 
     while line <= s:branch_end
         if foldlevel(line) == a:level && !s:folded(line)
@@ -281,7 +288,7 @@ function! fold#open() abort "{{{3
         return
     elseif s:max_closed_fold_level == s:fold_level
         call s:d_msg("closing all folds")
-        call s:branch_close_all()
+        call s:close_branch()
         return
     endif
 
@@ -309,19 +316,19 @@ function! fold#close() abort "{{{3
 
     if s:folded
         call s:d_msg("opening all folds: is folded")
-        foldopen!
-        return
-    elseif s:max_open_fold_level == s:NO_NESTED_FOLDS
-        call s:d_msg("opening all folds: s:max_open_fold_level = s:NO_NESTED_FOLDS")
-        foldclose
-        return
-    elseif s:max_open_fold_level == s:fold_level
-        call s:d_msg("opening all folds: s:max_open_fold_level = s:fold_level")
-        foldclose
+            call s:open_branch()
         return
     elseif s:max_open_fold_level == 0
         call s:d_msg("opening all folds: s:max_open_fold_level = 0")
-        foldopen!
+            call s:open_branch()
+        return
+    elseif s:max_open_fold_level == s:NO_NESTED_FOLDS
+        call s:d_msg("closing fold: s:max_open_fold_level = s:NO_NESTED_FOLDS")
+        foldclose
+        return
+    elseif s:max_open_fold_level == s:fold_level
+        call s:d_msg("closing fold: s:max_open_fold_level = s:fold_level")
+        foldclose
         return
     endif
 
