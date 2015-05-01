@@ -50,8 +50,11 @@ let s:NO_MORE_FOLDS_FOUND = 0
 let s:NO_BRANCH_END_FOUND = 0
 let s:NO_NESTED_FOLDS = -2
 
-let s:START = 0
-let s:END  = 1
+let s:START = 1
+let s:END  = 0
+
+let s:TRUE = 1
+let s:FALSE  = 0
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}2
 
 " PRIVATE FUNCTIONS {{{2
@@ -63,6 +66,7 @@ endfunction "}}}3
 function! s:close_branch() abort "{{{3
     execute s:branch_start . ',' . s:branch_end . ' foldclose!'
 endfunction "}}}3
+
 function! s:init() abort "{{{3
     call s:d_header('init')
 
@@ -127,9 +131,13 @@ function! s:do_find_branch(line, type) abort "{{{3
 
     let view = winsaveview()
     let value = 0
+
     if !s:folded(line)
         let s:close_flag = s:TRUE
+    else
+        let s:close_flag = s:FALSE
     endif
+
     try
         if s:close_flag
             normal! zc
