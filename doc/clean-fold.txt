@@ -1,0 +1,89 @@
+*clean-fold*         Clean way of using and seeing folds
+
+
+                        Clean Fold    By Ryan Carney~
+
+                                                              *clean-fold.txt*
+
+Description ......................................... |clean-fold-description|
+Usage ............................................... |clean-fold-usage|
+Configuration ....................................... |clean-fold-configuration|
+
+==============================================================================
+DESCRIPTION                                          *clean-fold-description*
+
+Folds in Vim always seemed somewhat cumbersome for taking notes and outlining,
+I wanted a clean way of viewing and interfacing with folds. After playing with
+emacs org-mode. I knew I wanted visibility cycling in Vim.
+
+==============================================================================
+USAGE                                                     *clean-fold-usage*
+
+------------------------------------------------------------------------------
+MAPPINGS~
+
+                                                *<CR>*
+<CR>                    Cycle open folds starting at the top level fold.
+                        Subsequent invocations will open folds nested one
+                        level under the top level fold. When all folds are
+                        open. All folds will be closed recursively.
+                        Plug mapping: `<Plug>(fold-open)`
+
+                                                *<BS>*
+<BS>                    Cycle close folds starting at the lowest nested fold.
+                        Subsequent invocations will close folds nested one
+                        level above the lowest nested fold. When all folds are
+                        closed the final fold will be opened recursively.
+                        Plug mapping: `<Plug>(fold-open)`
+
+------------------------------------------------------------------------------
+FOLD TEXT STYLE~
+
+Alternatives to the default foldtext and a new foldmethod
+
+fold#clean_fold_text({foldchar})
+                Cleaner alternative to default fold text, still including
+                number of folded lines
+
+                Examples: >
+                        set foldtext=fold#clean_fold_text('_')
+<
+
+fold#cleanest_fold_text()
+                just include the text on the line except fold markers
+
+                Examples: >
+                        set foldtext=fold#cleanest_fold_text()
+
+------------------------------------------------------------------------------
+FOLD EXPRESSION~
+
+Lines that are at the same indented level are folded along with the first line
+above them one indent level up.
+
+fold#get_clean_fold_expr({lnum})
+                like indent folding but also include first line that is one
+                indent level lower
+
+                Examples: >
+                        set foldmethod=expr
+                        set foldexpr=fold#get_clean_fold_expr(v:lnum)
+
+
+==============================================================================
+CONFIGURATION                                       *clean-fold-configuration*
+
+Example an alternate configuration:~
+
+nmap <Tab><Tab> <Plug>(fold-open)
+nmap <S-Tab><S-Tab> <Plug>(fold-close)
+
+------------------------------------------------------------------------------
+
+g:clean_fold_default_mapping~
+
+If unset disables the default mappings.
+
+default value: 1
+
+vim:tw=78:ts=8:ft=help:norl:fdm=manual:
