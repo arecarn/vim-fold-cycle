@@ -24,7 +24,7 @@ let g:fold_debug = get(g:, 'fold_debug', 0)
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 nnoremap <silent> <script> <Plug>(fold-open) :<C-u>call fold#open()<CR>
 if !hasmapto('<Plug>(fold-open)')
-nmap <unique> <CR> <Plug>(fold-open)
+    nmap <expr><unique><CR> expand('%') ==# "[Command Line]" ? "\<CR>" : "<Plug>(fold-open)"
 endif
 
 nnoremap <silent> <script> <Plug>(fold-close) :<C-u>call fold#close()<CR>
