@@ -4,10 +4,10 @@ Cycle open and close folds in a org-mode inspired way.
 
 Usage
 -----
-| Mode   | Default Key | `<Plug>` map         | Description              |
-| ------ | ----------- | -------------------- | ------------------------ |
-| normal | \<CR>        | `<Plug>(fold-open)`  | Cycle open nested folds  |
-| normal | \<BS>        | `<Plug>(fold-close)` | Cycle close nested folds |
+| Mode   | Default Key | `<Plug>` map               | Description              |
+| ------ | ----------- | -------------------------- | ------------------------ |
+| normal | \<CR>       | `<Plug>(fold-cycle-open)`  | Cycle open nested folds  |
+| normal | \<BS>       | `<Plug>(fold-cycle-close)` | Cycle close nested folds |
 
 Demo
 ----
@@ -17,6 +17,6 @@ Customization
 -------------
 Example:
 ```vim
-nmap <Tab><Tab> <Plug>(fold-open)
-nmap <S-Tab><S-Tab> <Plug>(fold-close)
+nmap <Tab><Tab> <Plug>(fold-cycle-open)
+nmap <S-Tab><S-Tab> <Plug>(fold-cycle-close)
 ```
