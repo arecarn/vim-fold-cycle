@@ -12,9 +12,12 @@ Configuration ....................................... |clean-fold-configuration|
 ==============================================================================
 DESCRIPTION                                          *clean-fold-description*
 
-Folds in Vim always seemed somewhat cumbersome for taking notes and outlining,
-I wanted a clean way of viewing and interfacing with folds. After playing with
-emacs org-mode. I knew I wanted visibility cycling in Vim.
+This plugin has a few purposes, perhaps most interestingly, the ability to
+cycle open and close folds and nested folds under the cursor or type of
+'visibility cycling' similar to Emcas org-mode. Additionally this plugin provides
+alternatives to the default foldtext, that clean up the appearance of folds.
+Finally this plugin provides a new fold expression that is an alternative to
+Vims standard indent method of folding.
 
 ==============================================================================
 USAGE                                                     *clean-fold-usage*
@@ -42,32 +45,49 @@ FOLD TEXT STYLE~
 Alternatives to the default foldtext and a new foldmethod
 
 fold#clean_fold_text({foldchar})
-                Cleaner alternative to default fold text, still including
-                number of folded lines
+                Cleaner alternative to default fold text that includes the text
+                on the line, then fills the rest of the fold line with
+                {foldchar} and displays the number of folded lines on the
+                middle side of the screen.
 
-                Examples: >
+                Usage: (using '_' as the fill character) >
                         set foldtext=fold#clean_fold_text('_')
 <
 
 fold#cleanest_fold_text()
-                just include the text on the line except fold markers
+                Just includes the text on the line except fold markers
 
-                Examples: >
+                Usage: >
                         set foldtext=fold#cleanest_fold_text()
 
 ------------------------------------------------------------------------------
 FOLD EXPRESSION~
 
 Lines that are at the same indented level are folded along with the first line
-above them one indent level up.
+above them one indent level up. This fold expr was taken with basically no
+modification from Steve Losh's Learn Vimscript the Hard way's section on
+folding.
 
 fold#get_clean_fold_expr({lnum})
-                like indent folding but also include first line that is one
+                Like indent folding but also include first line that is one
                 indent level lower
 
-                Examples: >
+                Usage: >
                         set foldmethod=expr
                         set foldexpr=fold#get_clean_fold_expr(v:lnum)
+<
+
+                In the example below there would be two folds (shiftwidth=4)
+
+                Example:
+                >
+                        start of fold 1
+                            part of fold 1
+                            end of fold 1
+                        start of fold 2
+                            part of fold 2
+                            end of fold 2
+<
 
 
 ==============================================================================
