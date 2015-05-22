@@ -1,0 +1,53 @@
+*fold-cycle*              Cycle the visibility of folds
+
+                        Fold Cycle    By Ryan Carney~
+                                                              *fold-cycle.txt*
+
+Description ......................................... |fold-cycle-description|
+Usage ............................................... |fold-cycle-usage|
+Configuration ....................................... |fold-cycle-configuration|
+
+==============================================================================
+DESCRIPTION                                          *fold-cycle-description*
+
+This plugin has a few purposes, perhaps most interestingly, the ability to
+cycle open and close folds and nested folds under the cursor or type of
+'visibility cycling' similar to Emacs org-mode.
+
+==============================================================================
+USAGE                                                     *fold-cycle-usage*
+
+------------------------------------------------------------------------------
+MAPPINGS~
+
+                                                *<CR>*
+<CR>                    Cycle open folds starting at the top level fold.
+                        Subsequent invocations will open folds nested one
+                        level under the top level fold. When all folds are
+                        open. All folds will be closed recursively.
+                        Plug mapping: `<Plug>(fold-open)`
+
+                                                *<BS>*
+<BS>                    Cycle close folds starting at the lowest nested fold.
+                        Subsequent invocations will close folds nested one
+                        level above the lowest nested fold. When all folds are
+                        closed the final fold will be opened recursively.
+                        Plug mapping: `<Plug>(fold-open)`
+
+==============================================================================
+CONFIGURATION                                       *fold-cycle-configuration*
+
+Example an alternate configuration:~
+
+nmap <Tab><Tab> <Plug>(fold-open)
+nmap <S-Tab><S-Tab> <Plug>(fold-close)
+
+------------------------------------------------------------------------------
+
+g:clean_fold_default_mapping~
+
+If unset disables the default mappings.
+
+default value: 1
+
+vim:tw=78:ts=8:ft=help:norl:fdm=manual:

@@ -39,7 +39,7 @@ function! s:d_msg(text) abort "{{{2
 endfunction "}}}2
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}1
 
-" FOLD CYCLEING {{{1
+" FOLD CYCLING {{{1
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " SYMBOLIC VARIABLES {{{2
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -283,7 +283,7 @@ endfunction "}}}3
 
 " PUBLIC FUNCTIONS {{{2
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-function! fold#open() abort "{{{3
+function! fold_cycle#open() abort "{{{3
     if !s:init()
         call s:d_msg("init() failed")
         return
@@ -316,7 +316,7 @@ function! fold#open() abort "{{{3
     endwhile
 endfunction "}}}3
 
-function! fold#close() abort "{{{3
+function! fold_cycle#close() abort "{{{3
     if !s:init()
         call s:d_msg("init() failed")
         return
@@ -341,92 +341,6 @@ function! fold#close() abort "{{{3
     endif
 
     call s:branch_close(s:max_open_fold_level)
-endfunction "}}}3
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}2
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}1
-
-" VISUALS {{{1
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" PUBLIC FUNCTIONS {{{2
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-function! fold#clean_fold_text(foldchar) "{{{3
-    " call so:d_header('fold#clean_fold()')
-    "TODO handle wide chars with visual col
-    let line = getline(v:foldstart)
-
-    if &foldmethod == 'marker'
-        let foldmarker = substitute(&foldmarker, '\zs,.*', '', '')
-        let cmt = substitute(&commentstring, '\zs%s.*', '', '')
-        let line = substitute(line, '\s*'. '\('.cmt.'\)\?'. '\s*'.foldmarker.'\d*\s*', '', 'g')
-    endif
-
-    let lines_count = v:foldend - v:foldstart + 1
-    let lines_count_text = '| ' . printf("%10s", lines_count . ' lines') . ' |'
-    let foldtextstart = strpart(line, 0, (winwidth(0)*2)/3)
-    let foldtextend = lines_count_text . repeat(a:foldchar, 8)
-    let foldtextlength = strlen(substitute(foldtextstart . foldtextend, '.', 'x', 'g')) + &foldcolumn
-
-    return foldtextstart . repeat(a:foldchar, winwidth(0)-foldtextlength) . foldtextend
-endfunction "}}}3
-
-function! fold#cleanest_fold_text() "{{{3
-    " call so:d_header('fold#clean_fold()')
-    "TODO handle wide chars with visual col
-    let line = getline(v:foldstart)
-
-    " don't include fold markers in fold text it's ugly :)
-    if &foldmethod == 'marker'
-        let foldmarker = substitute(&foldmarker, '\zs,.*', '', '')
-        let cmt = substitute(&commentstring, '\zs%s.*', '', '')
-        let line = substitute(line, '\s*'. '\('.cmt.'\)\?'. '\s*'.foldmarker.'\d*\s*', '', 'g')
-    endif
-
-    " Foldtext ignores tabstop and shows tabs as one space,
-    " so convert tabs to 'tabstop' spaces so text lines up
-    let ts = repeat(' ',&tabstop)
-    let line = substitute(line, '\t', ts, 'g')
-
-    return line . repeat(' ', winwidth(0)-len(line))
-endfunction "}}}3
-
-function! fold#get_clean_fold_expr(lnum) "{{{3
-    " call s:d_header('fold#get_potion_fold()')
-    if getline(a:lnum) =~? '\v^\s*$'
-        return '-1'
-    endif
-
-    let this_indent = s:indent_level(a:lnum)
-    let next_indent = s:indent_level(s:next_non_blank_line(a:lnum))
-
-    if next_indent == this_indent
-        return this_indent
-    elseif next_indent < this_indent
-        return this_indent
-    elseif next_indent > this_indent
-        return '>' . next_indent
-    endif
-endfunction "}}}3
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}2
-
-" PRIVATE FUNCTIONS {{{2
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-function! s:indent_level(lnum) "{{{3
-    return indent(a:lnum) / &shiftwidth
-endfunction "}}}3
-
-function! s:next_non_blank_line(lnum) "{{{3
-    let numlines = line('$')
-    let current = a:lnum + 1
-
-    while current <= numlines
-        if getline(current) =~? '\v\S'
-            return current
-        endif
-
-        let current += 1
-    endwhile
-
-    return -2
 endfunction "}}}3
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}2
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}1
