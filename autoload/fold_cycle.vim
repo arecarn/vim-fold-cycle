@@ -296,7 +296,7 @@ function! fold_cycle#open() abort "{{{3
         return
     elseif s:max_closed_fold_level == s:fold_level
         call s:d_msg("closing all folds")
-        call s:close_branch()
+        call s:branch_close_all()
         return
     endif
 
