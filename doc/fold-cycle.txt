@@ -1,7 +1,7 @@
-*fold-cycle*              Cycle the visibility of folds
+*fold-cycle.txt*                                                      *fold-cycle*
+                        Cycle the visibility of folds
 
                         Fold Cycle    By Ryan Carney~
-                                                              *fold-cycle.txt*
 
 Description ......................................... |fold-cycle-description|
 Usage ............................................... |fold-cycle-usage|
@@ -10,44 +10,45 @@ Configuration ....................................... |fold-cycle-configuration|
 ==============================================================================
 DESCRIPTION                                          *fold-cycle-description*
 
-This plugin has a few purposes, perhaps most interestingly, the ability to
-cycle open and close folds and nested folds under the cursor or type of
-'visibility cycling' similar to Emacs org-mode.
+This plugin provides the ability to cycle open and closed folds and their
+nested folds. It could also be described as a type of visibility cycling
+similar to Emacs org-mode.
 
 ==============================================================================
-USAGE                                                     *fold-cycle-usage*
+USAGE                                                      *fold-cycle-usage*
 
-------------------------------------------------------------------------------
-MAPPINGS~
 
-                                                *<CR>*
 <CR>                    Cycle open folds starting at the top level fold.
                         Subsequent invocations will open folds nested one
                         level under the top level fold. When all folds are
-                        open. All folds will be closed recursively.
-                        Plug mapping: `<Plug>(fold-open)`
+                        open, the next invocation will close the current fold
+                        recursively. This mapping does override the default
+                        behavior of <CR>.
 
-                                                *<BS>*
+                        Plug mapping: `<Plug>(fold-cycle-open)`
+
+
 <BS>                    Cycle close folds starting at the lowest nested fold.
-                        Subsequent invocations will close folds nested one
-                        level above the lowest nested fold. When all folds are
-                        closed the final fold will be opened recursively.
-                        Plug mapping: `<Plug>(fold-open)`
+                        Subsequent invocations will close the next level of
+                        nested folds. When all folds are closed the next
+                        invocation will open the fold opened recursively. This
+                        mapping does override the default behavior of <BS>.
+
+                        Plug mapping: `<Plug>(fold-cycle-close)`
 
 ==============================================================================
-CONFIGURATION                                       *fold-cycle-configuration*
+CONFIGURATION                                      *fold-cycle-configuration*
 
-Example an alternate configuration:~
+g:fold_cycle_default_mapping                   *g:fold_cycle_default_mapping*
+                       If set to 0 disables the default mappings.
+                       Defaults to 1.
 
-nmap <Tab><Tab> <Plug>(fold-cycle-open)
-nmap <S-Tab><S-Tab> <Plug>(fold-cycle-close)
+                       Example of alternate mappings: >
 
-------------------------------------------------------------------------------
+                       let g:fold_cycle_default_mapping = 0 "disable default mappings
+                       nmap <Tab><Tab> <Plug>(fold-cycle-open)
+                       nmap <S-Tab><S-Tab> <Plug>(fold-cycle-close)
+<
 
-g:clean_fold_default_mapping~
-
-If unset disables the default mappings.
-
-default value: 1
-
+==============================================================================
 vim:tw=78:ts=8:ft=help:norl:fdm=manual:
