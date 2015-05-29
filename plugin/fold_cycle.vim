@@ -18,18 +18,22 @@ endif
 " GLOBALS {{{
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 let g:fold_debug = get(g:, 'fold_cycle_debug', 0)
+let g:fold_cycle_default_mapping = get(g:, 'fold_cycle_default_mapping', 1)
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}
 
 " MAPPINGS {{{
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-nnoremap <silent> <script> <Plug>(fold-cycle-open) :<C-u>call fold_cycle#open()<CR>
-if !hasmapto('<Plug>(fold-cycle-open)')
-    nmap <expr><unique><CR> expand('%') ==# "[Command Line]" ? "\<CR>" : "<Plug>(fold-cycle-open)"
-endif
+nnoremap <silent> <Plug>(fold-cycle-open) :<C-u>call fold_cycle#open()<CR>
+nnoremap <silent> <Plug>(fold-cycle-close) :<C-u>call fold_cycle#close()<CR>
 
-nnoremap <silent> <script> <Plug>(fold-cycle-close) :<C-u>call fold_cycle#close()<CR>
-if !hasmapto('<Plug>(fold-cycle-close)')
-    nmap <unique> <BS> <Plug>(fold-cycle-close)
+if g:fold_cycle_default_mapping
+    if !hasmapto('<Plug>(fold-cycle-open)')
+        nmap <expr><unique><CR> expand('%') ==# "[Command Line]" ? "\<CR>" : "<Plug>(fold-cycle-open)"
+    endif
+
+    if !hasmapto('<Plug>(fold-cycle-close)')
+        nmap <unique> <BS> <Plug>(fold-cycle-close)
+    endif
 endif
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}
 

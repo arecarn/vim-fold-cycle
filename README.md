@@ -1,6 +1,8 @@
 Fold Cycling
 ============
-Cycle open and close folds in a org-mode inspired way.
+This plugin provides the ability to cycle open and closed folds and nested
+folds. It could also be described as a  type of visibility cycling similar to
+Emacs org-mode.
 
 Usage
 -----
@@ -17,6 +19,7 @@ Customization
 -------------
 Example:
 ```vim
+let g:fold_cycle_default_mapping = 0 "disable default mappings
 nmap <Tab><Tab> <Plug>(fold-cycle-open)
 nmap <S-Tab><S-Tab> <Plug>(fold-cycle-close)
 ```
