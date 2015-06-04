@@ -96,10 +96,10 @@ function! s:init() abort "{{{3
         return
     endif
 
-    let s:max_closed_fold_level = s:find_max_closed_fold_level()
+    let s:max_closed_fold_level = s:find_max_closed_fold_level(s:branch_start, s:branch_end)
     call s:d_var_msg(s:max_closed_fold_level, 's:max_closed_fold_level')
 
-    let s:max_open_fold_level = s:find_max_open_fold_level()
+    let s:max_open_fold_level = s:find_max_open_fold_level(s:branch_start, s:branch_end)
     call s:d_var_msg(s:max_open_fold_level, 's:max_open_fold_level')
 
     return 1
@@ -183,13 +183,13 @@ function! s:find_next(line) abort "{{{3
     return s:do_fold_function('zj', a:line)
 endfunction "}}}3
 
-function! s:find_max_open_fold_level() abort "{{{3
+function! s:find_max_open_fold_level(start, end) abort "{{{3
     call s:d_header('s:find_max_open_fold_level()')
 
     let max_fold_level = s:fold_level
-    let line = s:branch_start
+    let line = a:start
 
-    while line < s:branch_end
+    while line < a:end
         if (foldlevel(line) > max_fold_level) && !s:folded(line)
             let max_fold_level = foldlevel(line)
             call s:d_var_msg(max_fold_level, 'max_fold_level')
@@ -206,27 +206,27 @@ function! s:find_max_open_fold_level() abort "{{{3
 
     call s:d_msg("return late")
 
-    if s:branch_start == line
-        call s:d_msg("return late: s:branch_start == line")
+    if a:start == line
+        call s:d_msg("return late: a:start == line")
         return s:NO_NESTED_FOLDS
     else
         return max_fold_level
     endif
 endfunction "}}}3
 
-function! s:find_max_closed_fold_level() abort "{{{3
+function! s:find_max_closed_fold_level(start, end) abort "{{{3
     call s:d_header('s:find_max_closed_fold_level()')
 
     "TODO try to make this happen
-    if s:branch_end == s:NO_BRANCH_END_FOUND
+    if a:end == s:NO_BRANCH_END_FOUND
         call s:d_msg('branch end is on the same line as cursor')
         return s:NOT_A_FOLD
     endif
 
-    let line = s:branch_start
+    let line = a:start
     let max_fold_level = s:fold_level
 
-    while line < s:branch_end
+    while line < a:end
         call s:d_var_msg(line, "line")
         if (foldlevel(line) > max_fold_level) && s:folded(line)
             let max_fold_level = foldlevel(line)
@@ -247,25 +247,25 @@ function! s:find_max_closed_fold_level() abort "{{{3
     return max_fold_level
 endfunction "}}}3
 
-function! s:branch_close_all() abort "{{{3
+function! s:close_all(start, end) abort "{{{3
 
     let level = s:max_open_fold_level
     while !s:folded(s:current_line)
-        call s:branch_close(level)
+        call s:close_level(a:start, a:end, level)
         let level = level - 1
     endwhile
 endfunction "}}}3
 
-function! s:branch_close(level) abort "{{{3
+function! s:close_level(start, end, level) abort "{{{3
 
     if a:level == s:NO_NESTED_FOLDS
         foldclose
         return
     endif
 
-    let line = s:branch_start
+    let line = a:start
 
-    while line <= s:branch_end
+    while line <= a:end
         if foldlevel(line) == a:level && !s:folded(line)
             call s:d_msg('folding line ' . line)
             execute line . 'foldclose'
@@ -274,36 +274,18 @@ function! s:branch_close(level) abort "{{{3
         let line = s:find_next(line)
         call s:d_var_msg(line, 'line')
         if line == s:NO_MORE_FOLDS_FOUND
-            call s:d_msg('break from branch_close()')
+            call s:d_msg('break from close_level()')
             return
         endif
     endwhile
 endfunction "}}}3
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}2
 
-" PUBLIC FUNCTIONS {{{2
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-function! fold_cycle#open() abort "{{{3
-    if !s:init()
-        call s:d_msg("init() failed")
-        return
-    endif
+function! s:open_level(start, end, level) abort
+    let line = s:start
 
-
-    if s:folded
-        call s:d_msg("opening fold :1")
-        foldopen
-        return
-    elseif s:max_closed_fold_level == s:fold_level
-        call s:d_msg("closing all folds")
-        call s:branch_close_all()
-        return
-    endif
-
-    let line = s:branch_start
-    while line < s:branch_end
+    while line < s:end
         call s:d_var_msg(line, 'line')
-        if foldlevel(line) <= s:max_closed_fold_level && s:folded(line)
+        if foldlevel(line) <= a:level && s:folded(line)
             call s:d_msg("opening line " . line)
             execute line . 'foldopen'
         endif
@@ -314,6 +296,28 @@ function! fold_cycle#open() abort "{{{3
             return
         endif
     endwhile
+endfunction
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}2
+
+" PUBLIC FUNCTIONS {{{2
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+function! fold_cycle#open() abort "{{{3
+    if !s:init()
+        call s:d_msg("init() failed")
+        return
+    endif
+
+    if s:folded
+        call s:d_msg("opening fold :1")
+        foldopen
+        return
+    elseif s:max_closed_fold_level == s:fold_level
+        call s:d_msg("closing all folds")
+        call s:close_all(s:branch_start, s:branch_end)
+        return
+    else
+        call s:open_level(s:branch_start, s:branch_end, s:max_closed_fold_level)
+    endif
 endfunction "}}}3
 
 function! fold_cycle#close() abort "{{{3
@@ -324,11 +328,11 @@ function! fold_cycle#close() abort "{{{3
 
     if s:folded
         call s:d_msg("opening all folds: is folded")
-            call s:open_branch()
+        call s:open_branch()
         return
     elseif s:max_open_fold_level == 0
         call s:d_msg("opening all folds: s:max_open_fold_level = 0")
-            call s:open_branch()
+        call s:open_branch()
         return
     elseif s:max_open_fold_level == s:NO_NESTED_FOLDS
         call s:d_msg("closing fold: s:max_open_fold_level = s:NO_NESTED_FOLDS")
@@ -340,7 +344,7 @@ function! fold_cycle#close() abort "{{{3
         return
     endif
 
-    call s:branch_close(s:max_open_fold_level)
+    call s:close_level(s:branch_start, s:branch_end, s:max_open_fold_level)
 endfunction "}}}3
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}2
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}1
