@@ -28,7 +28,7 @@
 1. Completely close the fold on line 1
 2. Open it 4,7,10,19 should remain closed
 3. Open it again on 10 4,7,13,16,19 should remain closed
-4. Open it on 22 all fold should be open
+4. Open it on 22 all folds should be open
 
 1. Completely open the all the folds
 2. Close 4,7,19
