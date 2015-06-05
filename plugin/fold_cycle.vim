@@ -25,6 +25,8 @@ let g:fold_cycle_default_mapping = get(g:, 'fold_cycle_default_mapping', 1)
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 nnoremap <silent> <Plug>(fold-cycle-open) :<C-u>call fold_cycle#open()<CR>
 nnoremap <silent> <Plug>(fold-cycle-close) :<C-u>call fold_cycle#close()<CR>
+nnoremap <silent> <Plug>(fold-cycle-open-global) :<C-u>call fold_cycle#open_global()<CR>
+nnoremap <silent> <Plug>(fold-cycle-close-global) :<C-u>call fold_cycle#close_global()<CR>
 
 if g:fold_cycle_default_mapping
     if !hasmapto('<Plug>(fold-cycle-open)')
@@ -33,6 +35,14 @@ if g:fold_cycle_default_mapping
 
     if !hasmapto('<Plug>(fold-cycle-close)')
         nmap <unique> <BS> <Plug>(fold-cycle-close)
+    endif
+
+    if !hasmapto('<Plug>(fold-cycle-open-global)')
+        nmap <unique> zr <Plug>(fold-cycle-open-global)
+    endif
+
+    if !hasmapto('<Plug>(fold-cycle-close-global)')
+        nmap <unique> zm <Plug>(fold-cycle-close-global)
     endif
 endif
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}

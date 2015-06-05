@@ -186,7 +186,7 @@ endfunction "}}}3
 function! s:find_max_open_fold_level(start, end) abort "{{{3
     call s:d_header('s:find_max_open_fold_level()')
 
-    let max_fold_level = s:fold_level
+    let max_fold_level = 0
     let line = a:start
 
     while line < a:end
@@ -224,7 +224,7 @@ function! s:find_max_closed_fold_level(start, end) abort "{{{3
     endif
 
     let line = a:start
-    let max_fold_level = s:fold_level
+    let max_fold_level = foldlevel(a:start)
 
     while line < a:end
         call s:d_var_msg(line, "line")
@@ -280,10 +280,10 @@ function! s:close_level(start, end, level) abort "{{{3
     endwhile
 endfunction "}}}3
 
-function! s:open_level(start, end, level) abort
-    let line = s:start
+function! s:open_level(start, end, level) abort "{{{3
+    let line = a:start
 
-    while line < s:end
+    while line < a:end
         call s:d_var_msg(line, 'line')
         if foldlevel(line) <= a:level && s:folded(line)
             call s:d_msg("opening line " . line)
@@ -296,7 +296,7 @@ function! s:open_level(start, end, level) abort
             return
         endif
     endwhile
-endfunction
+endfunction "}}}3
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}2
 
 " PUBLIC FUNCTIONS {{{2
@@ -345,6 +345,40 @@ function! fold_cycle#close() abort "{{{3
     endif
 
     call s:close_level(s:branch_start, s:branch_end, s:max_open_fold_level)
+endfunction "}}}3
+
+function! fold_cycle#open_global() abort "{{{3
+    call s:init()
+    let max_closed_fold_level = s:find_max_closed_fold_level(1, line('$'))
+    echomsg max_closed_fold_level
+
+    if max_closed_fold_level == 0
+        normal! zM
+    else
+        call s:open_level(1, line('$'), max_closed_fold_level)
+        let new_max_closed_fold_level = s:find_max_closed_fold_level(1, line('$'))
+        echomsg new_max_closed_fold_level
+        if new_max_closed_fold_level == max_closed_fold_level
+            normal! zM
+        endif
+    endif
+endfunction "}}}3
+
+function! fold_cycle#close_global() abort "{{{3
+    let max_open_fold_level = s:find_max_open_fold_level(1, line('$'))
+    echomsg max_open_fold_level
+
+    if max_open_fold_level == 0
+        normal! zR
+    else
+        call s:close_level(1, line('$'), max_open_fold_level)
+        let new_max_open_fold_level = s:find_max_open_fold_level(1, line('$'))
+        echomsg new_max_open_fold_level
+        echomsg max_open_fold_level
+        if new_max_open_fold_level == max_open_fold_level
+            normal! zR
+        endif
+    endif
 endfunction "}}}3
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}2
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}1
