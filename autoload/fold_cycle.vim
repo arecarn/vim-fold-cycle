@@ -162,6 +162,29 @@ function! s:do_find_branch(line, type) abort "{{{3
     return value
 endfunction "}}}3
 
+function! s:is_a_fold(line) abort "{{{3
+    let line = s:handle_line(a:line)
+
+    let view = winsaveview()
+    let value = 0
+
+    if s:folded(line)
+        let value = s:TRUE
+    else
+        try
+            normal! zc
+            let value = s:folded(line)
+            normal! zo
+        catch ^Vim\%((\a\+)\)\=:E490
+            let value = 0 "TODO use symbolic constant
+        endtry
+    endif
+
+    call winrestview(view)
+    call s:d_var_msg(value, 'value')
+    return value
+endfunction "}}}3
+
 function! s:do_fold_function(fold_keys, line) abort "{{{3
     let line = s:handle_line(a:line)
 
@@ -169,10 +192,23 @@ function! s:do_fold_function(fold_keys, line) abort "{{{3
     execute line
     execute 'normal! ' . a:fold_keys
     let line = line('.')
+
+    while !s:is_a_fold(line)
+        let line_before = line
+        call s:d_var_msg(line_before, 'line_before')
+        execute 'normal! ' . a:fold_keys
+        let line = line('.')
+        call s:d_var_msg(line, 'line')
+        if line == line_before
+            let line = s:NO_MORE_FOLDS_FOUND
+            break
+        endif
+    endwhile
+
     call winrestview(view)
 
-    if  line == a:line
-        return 0
+    if line == a:line
+        return s:NO_MORE_FOLDS_FOUND
     else
         return line
     endif
@@ -348,7 +384,6 @@ function! fold_cycle#close() abort "{{{3
 endfunction "}}}3
 
 function! fold_cycle#open_global() abort "{{{3
-    call s:init()
     let max_closed_fold_level = s:find_max_closed_fold_level(1, line('$'))
     echomsg max_closed_fold_level
 
@@ -366,18 +401,14 @@ endfunction "}}}3
 
 function! fold_cycle#close_global() abort "{{{3
     let max_open_fold_level = s:find_max_open_fold_level(1, line('$'))
-    echomsg max_open_fold_level
+    call s:d_var_msg(max_open_fold_level, 'max_open_fold_level')
 
     if max_open_fold_level == 0
+        call s:d_msg('opeing all folds')
         normal! zR
     else
         call s:close_level(1, line('$'), max_open_fold_level)
-        let new_max_open_fold_level = s:find_max_open_fold_level(1, line('$'))
-        echomsg new_max_open_fold_level
-        echomsg max_open_fold_level
-        if new_max_open_fold_level == max_open_fold_level
-            normal! zR
-        endif
+        call s:d_msg('close a level')
     endif
 endfunction "}}}3
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}2
