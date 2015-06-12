@@ -260,7 +260,7 @@ function! s:find_max_closed_fold_level(start, end) abort "{{{3
     endif
 
     let line = a:start
-    let max_fold_level = foldlevel(a:start)
+    let max_fold_level = 0
 
     while line < a:end
         call s:d_var_msg(line, "line")
@@ -347,11 +347,12 @@ function! fold_cycle#open() abort "{{{3
         call s:d_msg("opening fold :1")
         foldopen
         return
-    elseif s:max_closed_fold_level == s:fold_level
+    elseif s:max_closed_fold_level <= s:fold_level
         call s:d_msg("closing all folds")
         call s:close_all(s:branch_start, s:branch_end)
         return
     else
+        call s:d_msg("opening level")
         call s:open_level(s:branch_start, s:branch_end, s:max_closed_fold_level)
     endif
 endfunction "}}}3
@@ -394,7 +395,7 @@ function! fold_cycle#open_global() abort "{{{3
         let new_max_closed_fold_level = s:find_max_closed_fold_level(1, line('$'))
         echomsg new_max_closed_fold_level
         if new_max_closed_fold_level == max_closed_fold_level
-            normal! zM
+            normal! zR
         endif
     endif
 endfunction "}}}3
