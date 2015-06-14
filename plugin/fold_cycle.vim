@@ -38,11 +38,11 @@ if g:fold_cycle_default_mapping
     endif
 
     if !hasmapto('<Plug>(fold-cycle-open-global)')
-        nmap <unique> <leader>zr <Plug>(fold-cycle-open-global)
+        nmap <unique> z<CR> <Plug>(fold-cycle-open-global)
     endif
 
     if !hasmapto('<Plug>(fold-cycle-close-global)')
-        nmap <unique> <leader>zm <Plug>(fold-cycle-close-global)
+        nmap <unique> z<BS> <Plug>(fold-cycle-close-global)
     endif
 endif
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}

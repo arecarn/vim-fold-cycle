@@ -386,15 +386,16 @@ endfunction "}}}3
 
 function! fold_cycle#open_global() abort "{{{3
     let max_closed_fold_level = s:find_max_closed_fold_level(1, line('$'))
-    echomsg max_closed_fold_level
+    call s:d_var_msg(max_closed_fold_level, 'max_closed_fold_level')
 
     if max_closed_fold_level == 0
+        call s:d_msg('closing all folds')
         normal! zM
     else
+        call s:d_msg('close a level')
         call s:open_level(1, line('$'), max_closed_fold_level)
-        let new_max_closed_fold_level = s:find_max_closed_fold_level(1, line('$'))
-        echomsg new_max_closed_fold_level
-        if new_max_closed_fold_level == max_closed_fold_level
+        if max_closed_fold_level == s:find_max_closed_fold_level(1, line('$'))
+            call s:d_msg('opening all folds')
             normal! zR
         endif
     endif
@@ -405,11 +406,11 @@ function! fold_cycle#close_global() abort "{{{3
     call s:d_var_msg(max_open_fold_level, 'max_open_fold_level')
 
     if max_open_fold_level == 0
-        call s:d_msg('opeing all folds')
+        call s:d_msg('opening all folds')
         normal! zR
     else
-        call s:close_level(1, line('$'), max_open_fold_level)
         call s:d_msg('close a level')
+        call s:close_level(1, line('$'), max_open_fold_level)
     endif
 endfunction "}}}3
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}2
