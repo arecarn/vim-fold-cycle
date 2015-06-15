@@ -390,7 +390,7 @@ function! fold_cycle#open_global() abort "{{{3
 
     if max_closed_fold_level == 0
         call s:d_msg('closing all folds')
-        normal! zM
+        call s:close_all(1, line('$'))
     else
         call s:d_msg('close a level')
         call s:open_level(1, line('$'), max_closed_fold_level)
