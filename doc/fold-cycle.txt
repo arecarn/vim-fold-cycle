@@ -21,20 +21,41 @@ USAGE                                                      *fold-cycle-usage*
 <CR>                    Cycle open folds starting at the top level fold.
                         Subsequent invocations will open folds nested one
                         level under the top level fold. When all folds are
-                        open, the next invocation will close the current fold
-                        recursively. This mapping does override the default
-                        behavior of <CR>.
+                        open, the next invocation will close the top level
+                        fold recursively.
+
+                        This mapping overrides the default behavior of *<CR>*
 
                         Plug mapping: `<Plug>(fold-cycle-open)`
 
 
 <BS>                    Cycle close folds starting at the lowest nested fold.
-                        Subsequent invocations will close the next level of
+                        Subsequent usess will close the next level of
                         nested folds. When all folds are closed the next
-                        invocation will open the fold opened recursively. This
-                        mapping does override the default behavior of <BS>.
+                        us will open the fold recursively.
+
+                        This mapping overrides the default behavior of *<BS>*
 
                         Plug mapping: `<Plug>(fold-cycle-close)`
+
+z<CR>                   Cycle open all folds globally starting with closed
+                        folds with the lowest fold level. Subsequent
+                        uss will open all folds with the next lowest
+                        fold level. When all folds are open, the next
+                        use will close all folds recursively.
+
+                        This mapping overrides the default behavior of *z<CR>*
+
+                        Plug mapping: `<Plug>(fold-cycle-open-global)`
+
+
+z<BS>                   Cycle close all folds globally starting with open
+                        folds with the highest fold level. Subsequent
+                        uses will close folds with the next highest
+                        fold level. When all folds are closed, the next
+                        use will open all folds recursively.
+
+                        Plug mapping: `<Plug>(fold-cycle-close-global)`
 
 ==============================================================================
 CONFIGURATION                                      *fold-cycle-configuration*
@@ -43,12 +64,39 @@ g:fold_cycle_default_mapping                   *g:fold_cycle_default_mapping*
                        If set to 0 disables the default mappings.
                        Defaults to 1.
 
-                       Example of alternate mappings: >
 
+Configuration Examples
+
+                       Using just the "fold open" commands:
+                       >
                        let g:fold_cycle_default_mapping = 0 "disable default mappings
-                       nmap <Tab><Tab> <Plug>(fold-cycle-open)
-                       nmap <S-Tab><S-Tab> <Plug>(fold-cycle-close)
+                       nmap <CR> <Plug>(fold-cycle-open)
+                       nmap <BS> <Plug>(fold-cycle-open-global)
 <
+                       or
+                       >
+                       let g:fold_cycle_default_mapping = 0 "disable default mappings
+                       nmap <TAB><TAB> <Plug>(fold-cycle-open)
+                       nmap <S-TAB><S-TAB> <Plug>(fold-cycle-open-global)
+<
+
+                       Alternative Key Mappings
+                       >
+                       let g:fold_cycle_default_mapping = 0 "disable default mappings
+                       nmap z; <Plug>(fold-cycle-open)
+                       nmap z, <Plug>(fold-cycle-close)
+                       nmap z) <Plug>(fold-cycle-open-global)
+                       nmap z( <Plug>(fold-cycle-close-global)
+
+<
+                       Override Defaults
+                       >
+                       let g:fold_cycle_default_mapping = 0 "disable default mappings
+                       nmap zo <Plug>(fold-cycle-open)
+                       nmap zc <Plug>(fold-cycle-close)
+                       nmap zr <Plug>(fold-cycle-open-global)
+                       nmap zm <Plug>(fold-cycle-close-global)
+
 
 ==============================================================================
 vim:tw=78:ts=8:ft=help:norl:fdm=manual:
