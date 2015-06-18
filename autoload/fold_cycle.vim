@@ -190,7 +190,12 @@ function! s:do_fold_function(fold_keys, line) abort "{{{3
 
     let view = winsaveview()
     execute line
+    let saved_t_vb = &t_vb
+    let saved_visualbell = &visualbell
+    set visualbell t_vb=
     execute 'normal! ' . a:fold_keys
+    let &t_vb = saved_t_vb
+    let &visualbell = saved_visualbell
     let line = line('.')
 
     while !s:is_a_fold(line)
