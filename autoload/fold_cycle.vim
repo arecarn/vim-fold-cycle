@@ -338,17 +338,79 @@ function! s:open_level(start, end, level) abort "{{{3
         endif
     endwhile
 endfunction "}}}3
+
+function! fold_cycle#create_map(start, end) abort "{{{3
+    let start = s:handle_line(start)
+    let end = s:handle_line(end)
+
+    let max_open_fold_level = 0
+    let max_closed_fold_level = 0
+    let map = []
+
+    let line = start
+    while line <= end
+        let fold =
+                    \ {
+                    \ 'line'   : line('.'),
+                    \ 'level'  : foldlevel('.'),
+                    \ 'closed' : s:folded('.'),
+                    \ }
+                    \ )
+        if fold.closed && max_closed_fold_level < fold.level
+            max_closed_fold_level = fold.level
+        endif
+
+        if fold.open && max_open_fold_level < fold.level
+            max_open_fold_level = fold.level
+        endif
+
+        add(map, fold)
+
+        let line = s:find_next(line)
+        call s:d_var_msg(line, 'line')
+        if line == s:NO_MORE_FOLDS_FOUND
+            call s:d_msg('break from create_map()')
+            return {
+                        \'folds' : folds,
+                        \'max_open_fold_level' : max_open_fold_level,
+                        \'max_closed_fold_level' : max_closed_fold_level
+                   }
+        endif
+    endwhile
+endfunction "}}}3
+
+function! s:find_max_closed_fold_level(map)
+endfunction
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}2
 
 " PUBLIC FUNCTIONS {{{2
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+function! fold_cycle#open_map() abort "{{{3
+    let map = fold_cycle#create_map('.', '$')
+    let branch_start = s:find_branch_start('.')
+    let branch_end = s:find_branch_end('.')
+
+    if map[0].folded = s:TRUE
+        call s:d_msg("opening fold :1")
+        foldopen
+        return
+
+    elseif s:max_closed_fold_level <= s:fold_level
+        call s:d_msg("closing all folds")
+        call s:close_all(s:branch_start, s:branch_end)
+        return
+    else
+        call s:d_msg("opening level")
+        call s:open_level(s:branch_start, s:branch_end, s:max_closed_fold_level)
+    endif
+endfunction "}}}3
 function! fold_cycle#open() abort "{{{3
     if !s:init()
         call s:d_msg("init() failed")
         return
     endif
 
-    if s:folded
+    if s:folded('.')
         call s:d_msg("opening fold :1")
         foldopen
         return
@@ -368,7 +430,7 @@ function! fold_cycle#close() abort "{{{3
         return
     endif
 
-    if s:folded
+    if s:folded('.')
         call s:d_msg("opening all folds: is folded")
         call s:open_branch()
         return
