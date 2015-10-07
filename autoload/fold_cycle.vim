@@ -288,6 +288,14 @@ function! s:find_max_closed_fold_level(start, end) abort "{{{3
     return max_fold_level
 endfunction "}}}3
 
+function! s:close_all_map() abort "{{{3
+    while !s:folded(s:map.start)
+        call s:close_level_map(
+        \    a:map.max_open_fold_level
+        \)
+    endwhile
+endfunction "}}}3
+
 function! s:close_all(start, end) abort "{{{3
 
     let level = s:max_open_fold_level
@@ -321,9 +329,36 @@ function! s:close_level(start, end, level) abort "{{{3
     endwhile
 endfunction "}}}3
 
+function! s:close_level_map(level) abort "{{{3
+    for fold in s:map.folds
+        if fold.level == level
+            execute '.foldclose'
+            let s:map.folds[fold.line].closed = s:TRUE
+        endif
+    endfor
+endfunction "}}}3
+
 function! s:open_level(start, end, level) abort "{{{3
     let line = a:start
 
+    while line < a:end
+        call s:d_var_msg(line, 'line')
+        if foldlevel(line) <= a:level && s:folded(line)
+            call s:d_msg("opening line " . line)
+            execute line . 'foldopen'
+        endif
+
+        let line = s:find_next(line)
+        if line == s:NO_MORE_FOLDS_FOUND
+            call s:d_msg("no more folds" . line)
+            return
+        endif
+    endwhile
+endfunction "}}}3
+
+
+function! s:open_level_map(level) abort "{{{3
+    let line = map.branch_start
     while line < a:end
         call s:d_var_msg(line, 'line')
         if foldlevel(line) <= a:level && s:folded(line)
@@ -345,17 +380,16 @@ function! fold_cycle#create_map(start, end) abort "{{{3
 
     let max_open_fold_level = 0
     let max_closed_fold_level = 0
-    let map = []
+    let folds = {}
 
     let line = start
     while line <= end
-        let fold =
-                    \ {
-                    \ 'line'   : line('.'),
-                    \ 'level'  : foldlevel('.'),
-                    \ 'closed' : s:folded('.'),
-                    \ }
-                    \ )
+        let fold = {
+        \     'line'   : line('.'),
+        \     'level'  : foldlevel('.'),
+        \     'closed' : s:folded('.'),
+        \}
+
         if fold.closed && max_closed_fold_level < fold.level
             max_closed_fold_level = fold.level
         endif
@@ -364,46 +398,51 @@ function! fold_cycle#create_map(start, end) abort "{{{3
             max_open_fold_level = fold.level
         endif
 
-        add(map, fold)
+        folds[line('.')] = fold
 
         let line = s:find_next(line)
         call s:d_var_msg(line, 'line')
+
         if line == s:NO_MORE_FOLDS_FOUND
             call s:d_msg('break from create_map()')
-            return {
-                        \'folds' : folds,
-                        \'max_open_fold_level' : max_open_fold_level,
-                        \'max_closed_fold_level' : max_closed_fold_level
-                   }
+            let map = {
+            \     'folds' : folds,
+            \     'start' : start,
+            \     'end' : end
+            \     'max_open_fold_level' : max_open_fold_level,
+            \     'max_closed_fold_level' : max_closed_fold_level
+            \}
+
+            return map
         endif
     endwhile
 endfunction "}}}3
 
-function! s:find_max_closed_fold_level(map)
-endfunction
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}2
 
 " PUBLIC FUNCTIONS {{{2
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 function! fold_cycle#open_map() abort "{{{3
-    let map = fold_cycle#create_map('.', '$')
-    let branch_start = s:find_branch_start('.')
-    let branch_end = s:find_branch_end('.')
 
-    if map[0].folded = s:TRUE
+    let s:branch_start = s:find_branch_start('.')
+    let s:branch_end = s:find_branch_end('.')
+    let s:map = fold_cycle#create_map('.', '$')
+
+    if map.folds[0].closed = s:TRUE
         call s:d_msg("opening fold :1")
         foldopen
         return
 
-    elseif s:max_closed_fold_level <= s:fold_level
+    elseif map.max_closed_fold_level <= map.folds[0].level
         call s:d_msg("closing all folds")
-        call s:close_all(s:branch_start, s:branch_end)
+        call s:close_all_map()
         return
     else
         call s:d_msg("opening level")
-        call s:open_level(s:branch_start, s:branch_end, s:max_closed_fold_level)
+        call s:open_level_map(map.folds.max_closed_fold_level)
     endif
 endfunction "}}}3
+
 function! fold_cycle#open() abort "{{{3
     if !s:init()
         call s:d_msg("init() failed")
