@@ -28,7 +28,7 @@ nnoremap <silent> <Plug>(fold-cycle-close) :<C-u>call fold_cycle#close()<CR>
 
 if g:fold_cycle_default_mapping
     if !hasmapto('<Plug>(fold-cycle-open)')
-        nmap <expr><unique><CR> expand('%') ==# "[Command Line]" ? "\<CR>" : "<Plug>(fold-cycle-open)"
+        nmap <expr><unique><CR> expand('%') ==# '[Command Line]' || &filetype ==# 'qf' ?  '\<CR>' : '<Plug>(fold-cycle-open)'
     endif
 
     if !hasmapto('<Plug>(fold-cycle-close)')
