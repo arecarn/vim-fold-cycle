@@ -26,6 +26,7 @@ let g:fold_cycle_default_mapping = get(g:, 'fold_cycle_default_mapping', 1)
 nnoremap <silent> <Plug>(fold-cycle-open) :<C-u>call fold_cycle#open()<CR>
 nnoremap <silent> <Plug>(fold-cycle-close) :<C-u>call fold_cycle#close()<CR>
 nnoremap <silent> <Plug>(fold-cycle-close-all) :<C-u>call fold_cycle#close_all()<CR>
+nnoremap <silent> <Plug>(fold-cycle-open-all) :<C-u>call fold_cycle#open_all()<CR>
 
 function! Fold_cycle_is_quick_fix_or_commandline()
     return expand('%') ==# "[Command Line]" || &filetype ==# "qf"
