@@ -306,6 +306,19 @@ function! fold_cycle#open_all() abort "{{{3
     call s:open_branch()
 endfunction "}}}3
 
+function! fold_cycle#toggle_all() abort "{{{3
+    if !s:init()
+        call s:d_msg("init() failed")
+        return
+    endif
+
+    if s:folded
+        call s:open_branch()
+    else
+        call s:branch_close_all()
+    endif
+endfunction "}}}3
+
 function! fold_cycle#open() abort "{{{3
     if !s:init()
         call s:d_msg("init() failed")
