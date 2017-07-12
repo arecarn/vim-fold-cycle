@@ -19,8 +19,12 @@ endif
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 let g:fold_debug                  = get(g: , 'fold_cycle_debug'             , 0)
 let g:fold_cycle_default_mapping  = get(g: , 'fold_cycle_default_mapping'   , 1)
-let g:fold_cycle_toggle_max_open  = get(g: , 'fold_cycle_toggle_max_open '  , 1)
-let g:fold_cycle_toggle_max_close = get(g: , 'fold_cycle_toggle_max_close ' , 1)
+if !exists("g:fold_cycle_toggle_max_open")
+    let g:fold_cycle_toggle_max_open  = get(g: , 'fold_cycle_toggle_max_open '  , 1)
+endif
+if !exists("g:fold_cycle_toggle_max_close")
+    let g:fold_cycle_toggle_max_close = get(g: , 'fold_cycle_toggle_max_close ' , 1)
+endif
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""}}}
 
 " MAPPINGS {{{
