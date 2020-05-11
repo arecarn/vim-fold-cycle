@@ -153,7 +153,7 @@ function! s:do_find_branch(line, type) abort "{{{3
             normal! zo
         endif
 
-    catch ^Vim\%((\a\+)\)\=:E490
+    catch /^Vim\%((\a\+)\)\=:E490/
         let value = 0 "TODO use symbolic constant
 
     endtry
