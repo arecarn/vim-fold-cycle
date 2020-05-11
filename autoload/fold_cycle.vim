@@ -330,7 +330,7 @@ function! fold_cycle#open() abort "{{{3
         call s:d_msg("opening fold :1")
         foldopen
         return
-    elseif s:max_closed_fold_level == s:fold_level
+    elseif s:max_closed_fold_level == s:fold_level && g:fold_cycle_toggle_max_open
         call s:d_msg("closing all folds")
         call s:branch_close_all()
         return
@@ -358,11 +358,11 @@ function! fold_cycle#close() abort "{{{3
         return
     endif
 
-    if s:folded
+    if s:folded && g:fold_cycle_toggle_max_close
         call s:d_msg("opening all folds: is folded")
             call s:open_branch()
         return
-    elseif s:max_open_fold_level == 0
+    elseif s:max_open_fold_level == 0 && g:fold_cycle_toggle_max_close
         call s:d_msg("opening all folds: s:max_open_fold_level = 0")
             call s:open_branch()
         return
